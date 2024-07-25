@@ -16,7 +16,7 @@ describe('DataStorage', () => {
   });
 
   test('should throw an error if the element is not found', () => {
-    expect(() => new DataStorage(null)).toThrow('elementId is not defined');
+    expect(() => new DataStorage(null)).toThrow('DataStorage Element not found');
   });
 
   test('should store data correctly', () => {
