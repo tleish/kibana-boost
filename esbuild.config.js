@@ -2,6 +2,8 @@ const esbuild = require('esbuild');
 const path = require('path');
 const fs = require('fs');
 
+const VERSION = '0.1.0'
+
 const cssStringPlugin = {
   name: 'css-string',
   setup(build) {
@@ -20,7 +22,7 @@ let userScriptBanner = `
 // ==UserScript==
 // @name         Kibana Boost
 // @namespace    https://github.com/tleish/
-// @version      0.2
+// @version      ${VERSION}
 // @updateURL    https://github.com/tleish/kibana-boost/raw/main/dist/kibana_boost.meta.js
 // @downloadURL  https://github.com/tleish/kibana-boost/raw/main/dist/kibana_boost.user.js
 // @description  Updates Kibana view
