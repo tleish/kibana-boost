@@ -21,7 +21,7 @@ Welcome to the Kibana-Boost Tampermonkey User Script repository! This script enh
     - If you don't already have it, install Tampermonkey for your browser. You can find it at [Tampermonkey's website](https://www.tampermonkey.net/).
 
 2. **Install the Script**
-    - Click the following link to install the Kibana-Boost script: [Install Script](https://raw.githubusercontent.com/tleish/kibana-boost/main/dist/kibana_boost.user.js).
+    - Click the following link to install the Kibana-Boost script: [Install Script](https://github.com/tleish/kibana-boost/raw/main/dist/kibana_boost.user.js).
 
 ### Usage
 
