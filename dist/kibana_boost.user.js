@@ -104,11 +104,16 @@
   // src/lib/DocViewerFormat.js
   var _DocViewerFormat = class {
     static for(parent) {
-      const textContent = parent.querySelector(".doc-viewer-value").textContent;
+      const highlights = [...new Set(parent.querySelectorAll("mark"))].map((mark) => mark.textContent);
+      const docViewerValue = parent.querySelector(".doc-viewer-value");
+      const textContent = docViewerValue.textContent;
       let language = detectLanguage(textContent);
       const formatClass = _DocViewerFormat.formatClasses[language];
       const format = new formatClass(parent);
       format.apply();
+      highlights.forEach((highlight) => {
+        docViewerValue.innerHTML = docViewerValue.innerHTML.replace(new RegExp(`\\b${highlight}\\b`, "g"), `<mark>${highlight}</mark>`);
+      });
     }
     constructor(parent) {
       this.parent = parent;
@@ -203,7 +208,7 @@
     }
     get element() {
       this.button = document.createElement("button");
-      this.button.classList.add("doc-viewer-button", `doc-viewer-button-${this.constructor.iconClass}`);
+      this.button.classList.add("doc-viewer-button", `doc-viewer-button-${this.constructor.iconClass}`, "kuiButton", "kuiButton--small", "kuiButton--secondary");
       this.button.appendChild(this.createIcon());
       this.button.appendChild(this.createTooltip());
       this.button.addEventListener("click", this.clickHandler.bind(this));
@@ -223,6 +228,14 @@
     clickHandler() {
       console.log("Button clicked");
     }
+    updateTooltip(text) {
+      this.tooltip.textContent = text;
+    }
+    updateIcon(iconClass) {
+      const removeClasses = [...this.icon.classList].filter((cssClass) => cssClass.includes("fa-"));
+      this.icon.classList.remove(...removeClasses);
+      this.icon.classList.add(`fa-${iconClass}`);
+    }
   };
   __publicField(Button, "iconClass", "");
   __publicField(Button, "toolTipText", "");
@@ -232,11 +245,18 @@
       return super.element;
     }
     clickHandler() {
-      this.parent.classList.remove("collapsed");
+      const expanded = this.parent.classList.toggle("collapsed");
+      if (expanded) {
+        this.updateTooltip("Show More");
+        this.updateIcon("expand");
+      } else {
+        this.updateTooltip("Show Less");
+        this.updateIcon("compress");
+      }
     }
   };
   __publicField(ExpandButton, "iconClass", "expand");
-  __publicField(ExpandButton, "toolTipText", "Expand");
+  __publicField(ExpandButton, "toolTipText", "Show More");
   var CopyButton = class extends Button {
     clickHandler(_event) {
       const value = this.parent.querySelector(".doc-viewer-value").textContent.trim();
@@ -255,14 +275,6 @@
     resetStatus() {
       this.updateIcon("copy");
       this.updateTooltip("Copy");
-    }
-    updateIcon(iconClass) {
-      const removeClasses = [...this.icon.classList].filter((cssClass) => cssClass.includes("fa-"));
-      this.icon.classList.remove(...removeClasses);
-      this.icon.classList.add(`fa-${iconClass}`);
-    }
-    updateTooltip(text) {
-      this.tooltip.textContent = text;
     }
   };
   __publicField(CopyButton, "iconClass", "copy");
@@ -317,7 +329,6 @@
     }
     checkForPanel() {
       const panel = this.findPanel();
-      debugger;
       if (panel) {
         this.callback(panel);
         this.observer.disconnect();
@@ -390,23 +401,32 @@
     init() {
       const originalOpen = XMLHttpRequest.prototype.open;
       const originalSend = XMLHttpRequest.prototype.send;
+      const originalSetRequestHeader = XMLHttpRequest.prototype.setRequestHeader;
       const listener = this;
       XMLHttpRequest.prototype.open = function(method, url, ...rest) {
         this._shouldListen = listener.shouldListen(url);
+        this._method = method;
+        this._url = url;
+        this._requestHeaders = {};
         return originalOpen.apply(this, [method, url, ...rest]);
       };
-      XMLHttpRequest.prototype.send = function(...args) {
+      XMLHttpRequest.prototype.setRequestHeader = function(header, value) {
         if (this._shouldListen) {
-          this.addEventListener("load", function() {
-            try {
-              const data = JSON.parse(this.responseText).responses[0].hits.hits.map((hit) => hit._source);
-              listener.dataStorage.storeData(JSON.stringify(data));
-            } catch (error) {
-              console.error("Error handling XHR response:", error);
-            }
-          });
+          this._requestHeaders[header] = value;
         }
-        return originalSend.apply(this, args);
+        return originalSetRequestHeader.apply(this, arguments);
+      };
+      XMLHttpRequest.prototype.send = function(body) {
+        if (this._shouldListen) {
+          const requestData = {
+            method: this._method,
+            url: this._url,
+            headers: this._requestHeaders,
+            body
+          };
+          listener.dataStorage.storeData(JSON.stringify(requestData));
+        }
+        return originalSend.apply(this, arguments);
       };
     }
   };
@@ -428,7 +448,7 @@
   };
 
   // src/assets/style.css
-  var style_default = ".doc-viewer-value .whitespace-pre-wrap {\n  white-space: pre-wrap;\n}\n\n.doc-viewer-parent {\n  position: relative;\n  /*width: 100%;*/\n  /*white-space: normal!important;*/\n}\n\n.doc-viewer-parent .doc-viewer-buttons {\n  visibility: hidden;\n  position: -webkit-sticky; /* Safari */\n  position: absolute;\n  top: 4px;\n  right: 20px;\n  z-index: 1000;\n}\n\n.doc-viewer-parent .doc-viewer-buttons button {\n  padding: 4px;\n}\n\n.doc-viewer-parent .doc-viewer-buttons:hover {\n  background-color: white;\n}\n\n.doc-viewer-parent .doc-viewer-buttons:hover ~ .doc-viewer-value {\n  background-color: #B5D8FF;\n}\n\n.doc-viewer-parent:hover .doc-viewer-buttons {\n  visibility: visible;\n}\n\n.doc-viewer-parent .doc-viewer-button-expand {\n  display: none;\n}\n\n.doc-viewer-parent.collapsed .doc-viewer-value {\n  overflow: auto;\n  max-height: 200px;\n}\n\n.doc-viewer-value.language-xml,\n.doc-viewer-value.language-json {\n  width: 100%;\n}\n\n.doc-viewer-parent.parent-language-xml.collapsed .doc-viewer-button-expand,\n.doc-viewer-parent.parent-language-json.collapsed .doc-viewer-button-expand {\n  display: inline;\n}\n\n\n/* Tooltip text */\n.doc-viewer-button .tooltiptext {\n  visibility: hidden;\n  width:60px;\n  top: 100%;\n  left: 50%;\n  margin-left: -30px; /* Use half of the width (120/2 = 60), to center the tooltip */\n  background-color: #474D4F;\n  color: #fff;\n  text-align: center;\n  padding: 5px 0;\n  border-radius: 6px;\n  font-size: 12px;\n\n  /* Position the tooltip text - see examples below! */\n  position: absolute;\n  z-index: 1;\n}\n\n\n/* Show the tooltip text when you mouse over the tooltip container */\n.doc-viewer-button:hover .tooltiptext {\n  visibility: visible;\n}\n\n.doc-viewer-button .tooltiptext:hover {\n  pointer-events: none; /* Prevent tooltip from affecting the hover state */\n}\n";
+  var style_default = ".doc-viewer-value .whitespace-pre-wrap {\n  white-space: pre-wrap;\n}\n\n.doc-viewer-parent {\n  position: relative;\n  /*width: 100%;*/\n  /*white-space: normal!important;*/\n}\n\n.doc-viewer-parent .doc-viewer-buttons {\n  visibility: hidden;\n  position: -webkit-sticky; /* Safari */\n  position: absolute;\n  top: 4px;\n  right: 20px;\n  z-index: 1000;\n}\n\n.doc-viewer-parent .doc-viewer-buttons button {\n  padding: 4px;\n  line-height: 12px;\n  border-radius: 4px;\n  border: 1px solid #B5D8FF;\n  background-color: #FFF;\n}\n\n.doc-viewer-parent .doc-viewer-buttons:hover {\n  background-color: white;\n}\n\n.doc-viewer-parent .doc-viewer-buttons:hover ~ .doc-viewer-value {\n  background-color: #B5D8FF;\n}\n\n.doc-viewer-parent:hover .doc-viewer-buttons {\n  visibility: visible;\n}\n\n.doc-viewer-parent .doc-viewer-button-expand {\n  display: none;\n}\n\n.doc-viewer-parent.collapsed .doc-viewer-value {\n  overflow: auto;\n  max-height: 200px;\n}\n\n.doc-viewer-value.language-xml,\n.doc-viewer-value.language-json {\n  width: 100%;\n}\n\n.doc-viewer-parent.parent-language-xml .doc-viewer-button-expand,\n.doc-viewer-parent.parent-language-json .doc-viewer-button-expand {\n  display: inline;\n}\n\n\n/* Tooltip text */\n.doc-viewer-button .tooltiptext {\n  visibility: hidden;\n  width: 70px;\n  top: 100%;\n  left: 50%;\n  margin-left: -30px; /* Use half of the width (120/2 = 60), to center the tooltip */\n  background-color: #474D4F;\n  color: #fff;\n  text-align: center;\n  padding: 5px 0;\n  border-radius: 6px;\n  font-size: 12px;\n\n  /* Position the tooltip text - see examples below! */\n  position: absolute;\n  z-index: 1;\n}\n\n\n/* Show the tooltip text when you mouse over the tooltip container */\n.doc-viewer-button:hover .tooltiptext {\n  visibility: visible;\n}\n\n.doc-viewer-button .tooltiptext:hover {\n  pointer-events: none; /* Prevent tooltip from affecting the hover state */\n}\n";
 
   // src/index.js
   var discoverUrlPattern = "http://127.0.0.1:9200/_plugin/kibana/app/kibana#/discover";

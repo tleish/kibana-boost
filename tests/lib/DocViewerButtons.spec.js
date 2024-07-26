@@ -49,10 +49,19 @@ describe('DocViewerButtons.for', () => {
     expect(parent.querySelector('.doc-viewer-button-copy')).toBeTruthy();
   });
 
-  it('expands the doc viewer', () => {
+  it('toggles the doc viewer', () => {
+    const button = parent.querySelector('.doc-viewer-button-expand')
+    const toolTip = button.querySelector('.tooltiptext');
+    const icon = button.querySelector('i');
     parent.classList.add('collapsed');
-    parent.querySelector('.doc-viewer-button-expand').click();
+    button.click();
     expect(parent.classList.contains('collapsed')).toBeFalsy();
+    expect(toolTip.textContent).toBe('Show Less');
+    expect(icon.classList.contains('fa-compress')).toBeTruthy();
+    button.click();
+    expect(parent.classList.contains('collapsed')).toBeTruthy();
+    expect(toolTip.textContent).toBe('Show More');
+    expect(icon.classList.contains('fa-expand')).toBeTruthy();
   });
 
   it('copies the value to the clipboard', async () => {

@@ -19,6 +19,10 @@
 
 .doc-viewer-parent .doc-viewer-buttons button {
   padding: 4px;
+  line-height: 12px;
+  border-radius: 4px;
+  border: 1px solid #B5D8FF;
+  background-color: #FFF;
 }
 
 .doc-viewer-parent .doc-viewer-buttons:hover {
@@ -47,8 +51,8 @@
   width: 100%;
 }
 
-.doc-viewer-parent.parent-language-xml.collapsed .doc-viewer-button-expand,
-.doc-viewer-parent.parent-language-json.collapsed .doc-viewer-button-expand {
+.doc-viewer-parent.parent-language-xml .doc-viewer-button-expand,
+.doc-viewer-parent.parent-language-json .doc-viewer-button-expand {
   display: inline;
 }
 
@@ -56,7 +60,7 @@
 /* Tooltip text */
 .doc-viewer-button .tooltiptext {
   visibility: hidden;
-  width:60px;
+  width: 70px;
   top: 100%;
   left: 50%;
   margin-left: -30px; /* Use half of the width (120/2 = 60), to center the tooltip */

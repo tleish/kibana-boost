@@ -3,11 +3,19 @@ import detectLanguage from "./detectLanguage";
 export default class DocViewerFormat {
   static formatClasses = {};
   static for(parent) {
-    const textContent = parent.querySelector('.doc-viewer-value').textContent;
+    const highlights =  [...new Set(parent.querySelectorAll('mark'))].map(mark => mark.textContent);
+
+    const docViewerValue = parent.querySelector('.doc-viewer-value');
+    const textContent = docViewerValue.textContent;
     let language = detectLanguage(textContent);
     const formatClass = DocViewerFormat.formatClasses[language]
+
     const format = new formatClass(parent);
     format.apply();
+
+    highlights.forEach(highlight => {
+      docViewerValue.innerHTML = docViewerValue.innerHTML.replace(new RegExp(`\\b${highlight}\\b`, 'g'), `<mark>${highlight}</mark>`);
+    });
   }
 
   static languageFormatting = 'auto';

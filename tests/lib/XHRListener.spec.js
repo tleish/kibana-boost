@@ -3,10 +3,9 @@ import XHRListener from 'XHRListener';
 describe('XHRListener', () => {
   let dataStorageMock;
   let shouldListenMock;
-  let xhrListener;
   let originalOpen;
   let originalSend;
-  let mockXHR;
+  let originalSetRequestHeader;
 
   beforeEach(() => {
     // Mock dataStorage and shouldListen
@@ -18,42 +17,45 @@ describe('XHRListener', () => {
     // Mock XMLHttpRequest methods and properties
     originalOpen = XMLHttpRequest.prototype.open;
     originalSend = XMLHttpRequest.prototype.send;
+    originalSetRequestHeader = XMLHttpRequest.prototype.setRequestHeader;
 
-    mockXHR = {
-      open: jest.fn(),
-      send: jest.fn(),
-      addEventListener: jest.fn(),
-      responseText: '',
-      _shouldListen: false,
-    };
-
-    XMLHttpRequest.prototype.open = jest.fn(function (...args) {
-      mockXHR._shouldListen = shouldListenMock(args[1]);
-      originalOpen.apply(this, args);
+    XMLHttpRequest.prototype.open = jest.fn(function(method, url, ...rest) {
+      this._shouldListen = shouldListenMock(url);
+      this._method = method;
+      this._url = url;
+      this._requestHeaders = {};
+      return originalOpen.apply(this, [method, url, ...rest]);
     });
 
-    XMLHttpRequest.prototype.send = jest.fn(function (...args) {
-      if (mockXHR._shouldListen) {
-        this.addEventListener('load', function () {
-          try {
-            const data = JSON.parse(mockXHR.responseText).responses[0].hits.hits.map(hit => hit._source);
-            dataStorageMock.storeData(JSON.stringify(data));
-          } catch (error) {
-            console.error('Error handling XHR response:', error);
-          }
-        });
+    XMLHttpRequest.prototype.setRequestHeader = jest.fn(function(header, value) {
+      if (this._shouldListen) {
+        this._requestHeaders[header] = value;
       }
-      originalSend.apply(this, args);
+      return originalSetRequestHeader.apply(this, arguments);
+    });
+
+    XMLHttpRequest.prototype.send = jest.fn(function(body) {
+      if (this._shouldListen) {
+        const requestData = {
+          method: this._method,
+          url: this._url,
+          headers: this._requestHeaders,
+          body: body
+        };
+        dataStorageMock.storeData(JSON.stringify(requestData));
+      }
+      return originalSend.apply(this, arguments);
     });
 
     // Instantiate the XHRListener
-    xhrListener = new XHRListener(dataStorageMock, shouldListenMock);
+    new XHRListener(dataStorageMock, shouldListenMock);
   });
 
   afterEach(() => {
     // Restore original XMLHttpRequest methods
     XMLHttpRequest.prototype.open = originalOpen;
     XMLHttpRequest.prototype.send = originalSend;
+    XMLHttpRequest.prototype.setRequestHeader = originalSetRequestHeader;
     jest.clearAllMocks();
   });
 
@@ -65,7 +67,7 @@ describe('XHRListener', () => {
     xhr.open('GET', mockUrl);
 
     expect(shouldListenMock).toHaveBeenCalledWith(mockUrl);
-    expect(mockXHR._shouldListen).toBe(true);
+    expect(xhr._shouldListen).toBe(true);
   });
 
   test('should not listen to URLs that shouldListen returns false for', () => {
@@ -76,65 +78,29 @@ describe('XHRListener', () => {
     xhr.open('GET', mockUrl);
 
     expect(shouldListenMock).toHaveBeenCalledWith(mockUrl);
-    expect(mockXHR._shouldListen).toBe(false);
+    expect(xhr._shouldListen).toBe(false);
   });
 
-  test('should store data from XHR response when shouldListen is true', () => {
+  test('should store request details when shouldListen is true', () => {
     const mockUrl = 'http://example.com/api';
-    const mockResponse = {
-      responses: [
-        {
-          hits: {
-            hits: [
-              { _source: { field1: 'value1' } },
-              { _source: { field2: 'value2' } },
-            ],
-          },
-        },
-      ],
-    };
+    const mockBody = JSON.stringify({ key: 'value' });
 
     shouldListenMock.mockReturnValue(true);
 
     const xhr = new XMLHttpRequest();
-    xhr.open('GET', mockUrl);
-    xhr.send();
+    xhr.open('POST', mockUrl);
+    xhr.setRequestHeader('Content-Type', 'application/json');
+    xhr.send(mockBody);
 
-    mockXHR.responseText = JSON.stringify(mockResponse);
+    const expectedRequestData = JSON.stringify({
+      method: 'POST',
+      url: mockUrl,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: mockBody,
+    });
 
-    // Simulate the load event
-    const loadEvent = new Event('load');
-    xhr.dispatchEvent(loadEvent);
-
-    expect(dataStorageMock.storeData).toHaveBeenCalledWith(
-      JSON.stringify([
-        { field1: 'value1' },
-        { field2: 'value2' },
-      ])
-    );
-  });
-
-  test('should handle errors in XHR response parsing gracefully', () => {
-    const mockUrl = 'http://example.com/api';
-
-    shouldListenMock.mockReturnValue(true);
-
-    const xhr = new XMLHttpRequest();
-    xhr.open('GET', mockUrl);
-    xhr.send();
-
-    mockXHR.responseText = 'Invalid JSON';
-
-    // Mock console.error to suppress error logging in test output
-    const consoleErrorMock = jest.spyOn(console, 'error').mockImplementation(() => {});
-
-    // Simulate the load event
-    const loadEvent = new Event('load');
-    xhr.dispatchEvent(loadEvent);
-
-    expect(consoleErrorMock).toHaveBeenCalled;
-
-    // Restore console.error
-    consoleErrorMock.mockRestore();
+    expect(dataStorageMock.storeData).toHaveBeenCalledWith(expectedRequestData);
   });
 });

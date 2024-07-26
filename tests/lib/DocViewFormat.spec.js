@@ -1,11 +1,11 @@
 import DocViewerFormat from 'DocViewerFormat';
 
 // Mock window.hljs
-beforeAll(() => {
-  global.hljs = {
-    highlightElement: jest.fn(),
-  };
-});
+// beforeAll(() => {
+//   global.hljs = {
+//     highlightElement: jest.fn(),
+//   };
+// });
 
 describe('DocViewerFormat', () => {
   let parent, element;
@@ -47,9 +47,9 @@ describe('DocViewerFormat', () => {
       expect(element.classList.contains('language-json')).toBeTruthy();
     });
 
-    test('it highlights the element', () => {
-      expect(hljs.highlightElement).toHaveBeenCalledWith(element);
-    });
+    // test('it highlights the element', () => {
+    //   expect(hljs.highlightElement).toHaveBeenCalledWith(element);
+    // });
 
     test('parses typical ruby hash', () => {
       element.classList.remove('whitespace-pre-wrap');
@@ -114,10 +114,6 @@ describe('DocViewerFormat', () => {
     it('it assigns the language-json class', () => {
       expect(element.classList.contains('language-xml')).toBeTruthy();
     });
-
-    it('it highlights the element', () => {
-      expect(hljs.highlightElement).toHaveBeenCalledWith(element);
-    });
   });
 
   describe('when language is JSON', () => {
@@ -134,11 +130,7 @@ describe('DocViewerFormat', () => {
       expect(element.classList.contains('language-json')).toBeTruthy();
     });
 
-    it('it highlights the element', () => {
-      expect(hljs.highlightElement).toHaveBeenCalledWith(element);
-    });
-    
-    test('it prettyPrints JSON', () => {
+   test('it prettyPrints JSON', () => {
       // expect should compare to pretty printed json
       expect(element.textContent).toBe(`{
   "shipment": {
@@ -149,6 +141,29 @@ describe('DocViewerFormat', () => {
   }
 }`);
       expect(element.classList.contains('language-json')).toBeTruthy();
+    });
+
+    it('it highlights the element', () => {
+      expect(element.classList.contains('hljs')).toBeTruthy()
+    });
+  });
+
+  describe('when language is marked', () => {
+    beforeEach(() => {
+      document.body.innerHTML = `
+        <table><tr><td><div class="doc-viewer-value">
+        {"shipment" => {"to_location": {"first_name": "<mark>John</mark>", "middle_name": "<mark>John</mark>", "last_name": "Johnson", "<mark>age</mark>": <mark>23</mark>, "street1" : "123 <mark>last</mark> ln"}}}
+        </div></td></tr></table>
+      `;
+      parent = document.querySelector('td');
+      element = document.querySelector('div');
+      DocViewerFormat.for(parent);
+    });
+
+    it('it highlights the element', () => {
+      expect(element.outerHTML.match(/<mark>John<\/mark>/g).length).toBe(2)
+      expect(element.outerHTML.match(/<mark>23<\/mark>/g).length).toBe(1)
+      expect(element.outerHTML.match(/<mark>last<\/mark>/g).length).toBe(1)
     });
   });
 

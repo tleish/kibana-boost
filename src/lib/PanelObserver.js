@@ -29,7 +29,6 @@ export default class PanelObserver {
 
   checkForPanel() {
     const panel = this.findPanel();
-    debugger;
     if (panel) {
       this.callback(panel);
       this.observer.disconnect();

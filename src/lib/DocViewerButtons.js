@@ -29,7 +29,7 @@ class Button {
 
   get element() {
     this.button = document.createElement('button');
-    this.button.classList.add('doc-viewer-button', `doc-viewer-button-${this.constructor.iconClass}`);
+    this.button.classList.add('doc-viewer-button', `doc-viewer-button-${this.constructor.iconClass}`, 'kuiButton', 'kuiButton--small', 'kuiButton--secondary');
     this.button.appendChild(this.createIcon());
     this.button.appendChild(this.createTooltip());
     this.button.addEventListener('click', this.clickHandler.bind(this));
@@ -52,11 +52,21 @@ class Button {
   clickHandler() {
     console.log('Button clicked');
   }
+
+  updateTooltip(text) {
+    this.tooltip.textContent = text;
+  }
+  
+  updateIcon(iconClass) {
+    const removeClasses = [...this.icon.classList].filter(cssClass => cssClass.includes('fa-'));
+    this.icon.classList.remove(...removeClasses);
+    this.icon.classList.add(`fa-${iconClass}`);
+  }
 }
 
 class ExpandButton extends Button {
   static iconClass = 'expand';
-  static toolTipText = 'Expand';
+  static toolTipText = 'Show More';
 
   get element() {
     this.parent.classList.add('collapsed');
@@ -64,7 +74,14 @@ class ExpandButton extends Button {
   }
 
   clickHandler() {
-    this.parent.classList.remove('collapsed');
+    const expanded = this.parent.classList.toggle('collapsed');
+    if(expanded) {
+      this.updateTooltip('Show More')
+      this.updateIcon('expand')
+    } else {
+      this.updateTooltip('Show Less')
+      this.updateIcon('compress')
+    }
   }
 }
 
@@ -90,15 +107,5 @@ class CopyButton extends Button {
   resetStatus() {
     this.updateIcon('copy')
     this.updateTooltip('Copy')
-  }
-
-  updateIcon(iconClass) {
-    const removeClasses = [...this.icon.classList].filter(cssClass => cssClass.includes('fa-'));
-    this.icon.classList.remove(...removeClasses);
-    this.icon.classList.add(`fa-${iconClass}`);
-  }
-
-  updateTooltip(text) {
-    this.tooltip.textContent = text;
   }
 }
