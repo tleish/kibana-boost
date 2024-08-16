@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kibana Boost
 // @namespace    https://github.com/tleish/
-// @version      0.1.0
+// @version      0.2.0
 // @updateURL    https://github.com/tleish/kibana-boost/raw/main/dist/kibana_boost.meta.js
 // @downloadURL  https://github.com/tleish/kibana-boost/raw/main/dist/kibana_boost.user.js
 // @description  Updates Kibana view
@@ -9,6 +9,7 @@
 // @copyright    2024+, tleish
 // @grant        GM_addElement
 // @grant        GM_addStyle
+// @grant        GM_openInTab
 // ==/UserScript==
 (() => {
   var __defProp = Object.defineProperty;
@@ -187,7 +188,8 @@
     static for(parent) {
       const buttons = [
         new ExpandButton(parent).element,
-        new CopyButton(parent).element
+        new CopyButton(parent).element,
+        new NewFilterButton(parent).element
       ];
       const docViewerButtons = new DocViewerButtons(buttons);
       parent.insertBefore(docViewerButtons.element, parent.firstChild);
@@ -279,6 +281,21 @@
   };
   __publicField(CopyButton, "iconClass", "copy");
   __publicField(CopyButton, "toolTipText", "Copy");
+  var NewFilterButton = class extends Button {
+    clickHandler(_event) {
+      const rowElement = this.parent.closest("tr");
+      const filterForButton = rowElement.querySelector('button[aria-label="Filter for value"]');
+      filterForButton.click();
+      const removeFilterButtons = document.querySelectorAll("button.filter-remove");
+      [...removeFilterButtons].slice(0, -1).reverse().forEach((button) => button.click());
+      const url = new URL(window.location);
+      const href = url.href.replace(/,query:\(language:lucene,query:'[^']+'\)/, "");
+      history.go(removeFilterButtons.length * -1);
+      GM_openInTab(href, { active: true });
+    }
+  };
+  __publicField(NewFilterButton, "iconClass", "search");
+  __publicField(NewFilterButton, "toolTipText", "Only");
 
   // src/lib/ButtonHandler.js
   var ButtonHandler = class {
@@ -439,7 +456,7 @@
   };
 
   // src/assets/style.css
-  var style_default = ".doc-viewer-value .whitespace-pre-wrap {\n  white-space: pre-wrap;\n}\n\n.doc-viewer-parent {\n  position: relative;\n  /*width: 100%;*/\n  /*white-space: normal!important;*/\n}\n\n.doc-viewer-parent .doc-viewer-buttons {\n  visibility: hidden;\n  position: -webkit-sticky; /* Safari */\n  position: absolute;\n  top: 4px;\n  right: 20px;\n  z-index: 1000;\n}\n\n.doc-viewer-parent .doc-viewer-buttons button {\n  padding: 4px;\n  line-height: 12px;\n  border-radius: 4px;\n  border: 1px solid #B5D8FF;\n  background-color: #FFF;\n}\n\n.doc-viewer-parent .doc-viewer-buttons:hover {\n  background-color: white;\n}\n\n.doc-viewer-parent .doc-viewer-buttons:hover ~ .doc-viewer-value {\n  background-color: #B5D8FF;\n}\n\n.doc-viewer-parent:hover .doc-viewer-buttons {\n  visibility: visible;\n}\n\n.doc-viewer-parent .doc-viewer-button-expand {\n  display: none;\n}\n\n.doc-viewer-parent.collapsed .doc-viewer-value {\n  overflow: auto;\n  max-height: 200px;\n}\n\n.doc-viewer-value.language-xml,\n.doc-viewer-value.language-json {\n  width: 100%;\n}\n\n.doc-viewer-parent.parent-language-xml .doc-viewer-button-expand,\n.doc-viewer-parent.parent-language-json .doc-viewer-button-expand {\n  display: inline;\n}\n\n\n/* Tooltip text */\n.doc-viewer-button .tooltiptext {\n  visibility: hidden;\n  width: 70px;\n  top: 100%;\n  left: 50%;\n  margin-left: -30px; /* Use half of the width (120/2 = 60), to center the tooltip */\n  background-color: #474D4F;\n  color: #fff;\n  text-align: center;\n  padding: 5px 0;\n  border-radius: 6px;\n  font-size: 12px;\n\n  /* Position the tooltip text - see examples below! */\n  position: absolute;\n  z-index: 1;\n}\n\n\n/* Show the tooltip text when you mouse over the tooltip container */\n.doc-viewer-button:hover .tooltiptext {\n  visibility: visible;\n}\n\n.doc-viewer-button .tooltiptext:hover {\n  pointer-events: none; /* Prevent tooltip from affecting the hover state */\n}\n";
+  var style_default = ".doc-viewer-value .whitespace-pre-wrap {\n  white-space: pre-wrap;\n}\n\n.doc-viewer-parent {\n  position: relative;\n  /*width: 100%;*/\n  /*white-space: normal!important;*/\n}\n\n.doc-viewer-parent .doc-viewer-buttons {\n  visibility: hidden;\n  position: -webkit-sticky; /* Safari */\n  position: absolute;\n  top: 4px;\n  right: 20px;\n  z-index: 1000;\n  display: flex;\n  flex-direction: row; /* This ensures the buttons are positioned horizontally */\n  justify-content: space-between; /* Optional: controls the spacing between buttons */\n  align-items: center; /* Optional: vertically aligns the buttons within the container */\n}\n\n.doc-viewer-parent .doc-viewer-buttons button {\n  position: relative;\n  line-height: 12px;\n  border-radius: 4px;\n  border: 1px solid #B5D8FF;\n  background-color: #FFF;\n  width: 22px;\n  height: 22px;\n  align-items: center;\n  justify-content: center;\n}\n\n.doc-viewer-parent .doc-viewer-buttons button svg {\n  width: 14px;\n  height: 14px;\n}\n\n.doc-viewer-parent .doc-viewer-buttons:hover {\n  background-color: white;\n}\n\n.doc-viewer-parent .doc-viewer-buttons:hover ~ .doc-viewer-value {\n  background-color: #B5D8FF;\n}\n\n.doc-viewer-parent:hover .doc-viewer-buttons {\n  visibility: visible;\n}\n\n.doc-viewer-parent .doc-viewer-button-expand {\n  display: none;\n}\n\n.doc-viewer-parent.collapsed .doc-viewer-value {\n  overflow: auto;\n  max-height: 200px;\n}\n\n.doc-viewer-value.language-xml,\n.doc-viewer-value.language-json {\n  width: 100%;\n}\n\n.doc-viewer-parent.parent-language-xml .doc-viewer-button-expand,\n.doc-viewer-parent.parent-language-json .doc-viewer-button-expand {\n  display: flex;\n}\n\n\n/* Tooltip text */\n.doc-viewer-button .tooltiptext {\n  visibility: hidden;\n  width: 70px;\n  top: 100%;\n  left: 50%;\n  margin-left: -30px; /* Use half of the width (120/2 = 60), to center the tooltip */\n  background-color: #474D4F;\n  color: #fff;\n  text-align: center;\n  padding: 5px 0;\n  border-radius: 6px;\n  font-size: 12px;\n\n  /* Position the tooltip text - see examples below! */\n  position: absolute;\n  z-index: 1;\n}\n\n\n/* Show the tooltip text when you mouse over the tooltip container */\n.doc-viewer-button:hover .tooltiptext {\n  visibility: visible;\n}\n\n.doc-viewer-button .tooltiptext:hover {\n  pointer-events: none; /* Prevent tooltip from affecting the hover state */\n}\n";
 
   // src/index.js
   var discoverUrlPattern = "http://127.0.0.1:9200/_plugin/kibana/app/kibana#/discover";

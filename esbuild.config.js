@@ -2,7 +2,7 @@ const esbuild = require('esbuild');
 const path = require('path');
 const fs = require('fs');
 
-const VERSION = '0.1.0'
+const VERSION = '0.2.0'
 
 const cssStringPlugin = {
   name: 'css-string',
@@ -30,6 +30,7 @@ let userScriptBanner = `
 // @copyright    2024+, tleish
 // @grant        GM_addElement
 // @grant        GM_addStyle
+// @grant        GM_openInTab
 // ==/UserScript==
 `.trim();
 

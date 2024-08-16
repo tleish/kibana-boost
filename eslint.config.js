@@ -19,6 +19,7 @@ module.exports = [
         URL: 'readonly',
         GM_addElement: 'readonly',
         GM_addStyle: 'readonly',
+        GM_openInTab: 'readonly',
         hljs: 'readonly',
         setTimeout: 'readonly',
       },
@@ -63,6 +64,7 @@ module.exports = [
         URL: 'readonly',
         GM_addElement: 'readonly',
         GM_addStyle: 'readonly',
+        GM_openInTab: 'readonly',
       },
       parser: babelParser,
       parserOptions: {

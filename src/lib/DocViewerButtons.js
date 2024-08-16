@@ -2,7 +2,8 @@ export default class DocViewerButtons {
   static for(parent) {
     const buttons = [
       (new ExpandButton(parent)).element,
-      (new CopyButton(parent)).element
+      (new CopyButton(parent)).element,
+      (new NewFilterButton(parent)).element
     ];
     const docViewerButtons = new DocViewerButtons(buttons);
     parent.insertBefore(docViewerButtons.element, parent.firstChild);
@@ -56,7 +57,7 @@ class Button {
   updateTooltip(text) {
     this.tooltip.textContent = text;
   }
-  
+
   updateIcon(iconClass) {
     const removeClasses = [...this.icon.classList].filter(cssClass => cssClass.includes('fa-'));
     this.icon.classList.remove(...removeClasses);
@@ -107,5 +108,26 @@ class CopyButton extends Button {
   resetStatus() {
     this.updateIcon('copy')
     this.updateTooltip('Copy')
+  }
+}
+
+class NewFilterButton extends Button {
+  static iconClass = 'search';
+  static toolTipText = 'Only';
+  
+  clickHandler(_event) {
+    const rowElement = this.parent.closest('tr');
+    const filterForButton = rowElement.querySelector('button[aria-label="Filter for value"]');
+    filterForButton.click();
+
+    // filter-remove
+    const removeFilterButtons = document.querySelectorAll('button.filter-remove');
+    [...removeFilterButtons].slice(0, -1).reverse().forEach(button => button.click());
+
+    const url = new URL(window.location);
+    const href = url.href.replace(/,query:\(language:lucene,query:'[^']+'\)/, '');
+
+    history.go(removeFilterButtons.length * -1);
+    GM_openInTab(href, { active: true });
   }
 }
