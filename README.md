@@ -33,6 +33,7 @@ Once installed, the script will automatically activate when you visit the Kibana
 - **Pretty Print and Syntax Highlighting**: XML and JSON results will be automatically formatted and highlighted.
 - **Copy Button**: A copy button will appear next to each value in the Discover results. Click it to copy the value to your clipboard.
 - **Download CSV**: Open the Share menu and click the new "Download CSV" link to export your results.
+- **Filter Only**: Filter for only a specific value by clicking the filter icon next to the value you want to filter by.
 
 ### Development
 
