@@ -18,16 +18,7 @@ describe('ButtonHandler', () => {
 
   test('should add the correct classes to the button', () => {
     const button = document.getElementById('testButton');
-    expect(button.classList.contains('euiLink')).toBe(true);
-    expect(button.classList.contains('euiLink--primary')).toBe(true);
-  });
-
-  test('should create an icon inside the button', () => {
-    const button = document.getElementById('testButton');
-    const icon = button.querySelector('i');
-    expect(icon).not.toBeNull();
-    expect(icon.classList.contains('fa')).toBe(true);
-    expect(icon.classList.contains('fa-download')).toBe(true);
+    expect(button.classList.contains('kuiLocalMenuItem')).toBe(true);
   });
 
   test('should call the callback when the button is clicked', () => {

@@ -61,4 +61,22 @@ describe('JsonToCsvConverter', () => {
     const result = JsonToCsvConverter.convert(data);
     expect(result).toBe(expectedCsv);
   });
+
+  test('should convert timestamps to a format excel can support', () => {
+    const data = [
+      { 'duration': 1.40697, '@timestamp': '2024-08-19T09:08:59.990Z' }
+    ];
+    const expectedCsv = 'timestamp_start,timestamp_end,duration,@timestamp\n2024-08-19 02:08:58.583,2024-08-19 02:08:59.990,1.40697,2024-08-19T09:08:59.990Z';
+    const result = JsonToCsvConverter.convert(data);
+    expect(result).toBe(expectedCsv);
+  });
+
+  test('should convert handle if no duration', () => {
+    const data = [
+      { 'duration': null, '@timestamp': '2024-08-19T09:08:59.990Z' }
+    ];
+    const expectedCsv = 'timestamp_start,timestamp_end,duration,@timestamp\n2024-08-19 02:08:59.990,2024-08-19 02:08:59.990,,2024-08-19T09:08:59.990Z';
+    const result = JsonToCsvConverter.convert(data);
+    expect(result).toBe(expectedCsv);
+  });
 });

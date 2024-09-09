@@ -91,7 +91,7 @@ class CopyButton extends Button {
   static toolTipText = 'Copy';
 
   clickHandler(_event) {
-    const value = this.parent.querySelector('.doc-viewer-value').textContent.trim();
+    const value = this.parent.querySelector('.kbnDocViewer__value').textContent.trim();
     navigator.clipboard.writeText(value).then(() => {
       this.copiedStatus(value);
       setTimeout(() => this.resetStatus(), 1000);

@@ -1,4 +1,4 @@
-.doc-viewer-value .whitespace-pre-wrap {
+.kbnDocViewer__value .whitespace-pre-wrap {
   white-space: pre-wrap;
 }
 
@@ -42,7 +42,8 @@
   background-color: white;
 }
 
-.doc-viewer-parent .doc-viewer-buttons:hover ~ .doc-viewer-value {
+.doc-viewer-parent .doc-viewer-buttons:hover ~ .kbnDocViewer__value,
+.doc-viewer-parent .doc-viewer-buttons:hover ~ .kbnDocViewer__value .hljs {
   background-color: #B5D8FF;
 }
 
@@ -54,13 +55,13 @@
   display: none;
 }
 
-.doc-viewer-parent.collapsed .doc-viewer-value {
+.doc-viewer-parent.collapsed .kbnDocViewer__value {
   overflow: auto;
   max-height: 200px;
 }
 
-.doc-viewer-value.language-xml,
-.doc-viewer-value.language-json {
+.kbnDocViewer__value.language-xml,
+.kbnDocViewer__value.language-json {
   width: 100%;
 }
 
@@ -87,6 +88,12 @@
   /* Position the tooltip text - see examples below! */
   position: absolute;
   z-index: 1;
+}
+
+.doc-viewer-button .fa-copy,
+.doc-viewer-button .fa-check,
+.doc-viewer-button .fa-search {
+  margin-left: -4px;
 }
 
 

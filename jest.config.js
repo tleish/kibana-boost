@@ -1,3 +1,5 @@
+process.env.TZ = 'MST';
+
 module.exports = {
   setupFilesAfterEnv: ['<rootDir>/tests/setupTests.js'],
   moduleNameMapper: {

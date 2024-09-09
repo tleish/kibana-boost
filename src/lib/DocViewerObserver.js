@@ -38,7 +38,7 @@ export default class DocViewerObserver {
   handleNewChildren(mutationsList) {
     for (let mutation of mutationsList) {
       if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
-        this.applyNewChildrenCallback([...mutation.target.querySelectorAll('.doc-viewer-value > span')])
+        this.applyNewChildrenCallback([...mutation.target.querySelectorAll('.kbnDocViewer__value > span')])
       }
     }
   }

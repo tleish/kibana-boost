@@ -58,8 +58,8 @@ describe('DocViewerObserver', () => {
 
   test('should handle new children and call the callback function', () => {
     const parentElement = document.createElement('td');
+    parentElement.classList.add('kbnDocViewer__value');
     const newElement = document.createElement('span');
-    newElement.classList.add('doc-viewer-value');
     const spanElement = document.createElement('span');
     newElement.appendChild(spanElement);
     parentElement.appendChild(newElement);
@@ -93,7 +93,7 @@ describe('DocViewerObserver', () => {
   test('should apply the callback to new child elements', () => {
     const parentElement = document.createElement('td');
     const newElement = document.createElement('span');
-    newElement.classList.add('doc-viewer-value');
+    newElement.classList.add('kbnDocViewer__value');
     const spanElement = document.createElement('span');
     newElement.appendChild(spanElement);
     parentElement.appendChild(newElement);
@@ -118,7 +118,7 @@ describe('DocViewerObserver', () => {
     newRow.setAttribute('data-test-subj', 'docTableDetailsRow');
     const newCell = document.createElement('td');
     const newSpan = document.createElement('span');
-    newSpan.classList.add('doc-viewer-value');
+    newSpan.classList.add('kbnDocViewer__value');
     const nestedSpan = document.createElement('span');
     newSpan.appendChild(nestedSpan);
     newCell.appendChild(newSpan);

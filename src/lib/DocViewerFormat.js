@@ -5,7 +5,7 @@ export default class DocViewerFormat {
   static for(parent) {
     const highlights =  [...new Set(parent.querySelectorAll('mark'))].map(mark => mark.textContent);
 
-    const docViewerValue = parent.querySelector('.doc-viewer-value');
+    const docViewerValue = parent.querySelector('.kbnDocViewer__value > span');
     const textContent = docViewerValue.textContent;
     let language = detectLanguage(textContent);
     const formatClass = DocViewerFormat.formatClasses[language]
@@ -21,7 +21,7 @@ export default class DocViewerFormat {
   static languageFormatting = 'auto';
   constructor(parent) {
     this.parent = parent;
-    this.element = parent.querySelector('.doc-viewer-value');
+    this.element = parent.querySelector('.kbnDocViewer__value > span');
   }
 
   apply() {

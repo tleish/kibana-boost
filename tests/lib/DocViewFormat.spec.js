@@ -11,10 +11,10 @@ describe('DocViewerFormat', () => {
   let parent, element;
   test('it adds whitespace-pre-wrap class', () => {
     document.body.innerHTML = `
-        <table><tr><td><div class="doc-viewer-value">{"shipment"=>{"to_location"=>{"first_name"=>"John", "last_name"=>"Doe"}}}</div></td></tr></table>
+        <table><tr><td><div class="kbnDocViewer__value"><span>{"shipment"=>{"to_location"=>{"first_name"=>"John", "last_name"=>"Doe"}}}</span></div></td></tr></table>
       `;
     parent = document.querySelector('td');
-    element = document.querySelector('div');
+    element = document.querySelector('span');
     DocViewerFormat.for(parent);
     expect(element.classList.contains('whitespace-pre-wrap')).toBeTruthy();
   });
@@ -22,11 +22,11 @@ describe('DocViewerFormat', () => {
   describe('when language is Ruby', () => {
     beforeEach(() => {
       document.body.innerHTML = `
-        <table><tr><td><div class="doc-viewer-value">{"shipment"=>{"to_location"=>{"first_name"=>"John", "last_name"=>"Doe"}}}</div></td></tr></table>
+        <table><tr><td><div class="kbnDocViewer__value"><span>{"shipment"=>{"to_location"=>{"first_name"=>"John", "last_name"=>"Doe"}}}</span></div></td></tr></table>
       `;
 
       parent = document.querySelector('td');
-      element = document.querySelector('div');
+      element = document.querySelector('span');
       DocViewerFormat.for(parent);
     });
 
@@ -86,7 +86,7 @@ describe('DocViewerFormat', () => {
     test('handles =>nil values', () => {
       element.classList.remove('whitespace-pre-wrap');
       element.textContent = `{:address=>{:company=>nil, "street1"=>nil, "street2":nil}}`;
-      element = document.querySelector('div');
+      element = document.querySelector('span');
       DocViewerFormat.for(parent);
       const json = JSON.parse(element.textContent);
       expect(json.address.company).toBe(null);
@@ -104,10 +104,10 @@ describe('DocViewerFormat', () => {
   describe('when language is XML', () => {
     beforeEach(() => {
       document.body.innerHTML = `
-        <table><tr><td><div class="doc-viewer-value">&lt;note&gt;&lt;to&gt;Tove&lt;/to&gt;&lt;from&gt;Jani&lt;/from&gt;&lt;heading&gt;Reminder&lt;/heading&gt;&lt;body&gt;Don't forget me this weekend!&lt;/body&gt;&lt;/note&gt;</div></td></tr></table>
+        <table><tr><td><div class="kbnDocViewer__value"><span>&lt;note&gt;&lt;to&gt;Tove&lt;/to&gt;&lt;from&gt;Jani&lt;/from&gt;&lt;heading&gt;Reminder&lt;/heading&gt;&lt;body&gt;Don't forget me this weekend!&lt;/body&gt;&lt;/note&gt;</span></div></td></tr></table>
       `;
       parent = document.querySelector('td');
-      element = document.querySelector('div');
+      element = document.querySelector('span');
       DocViewerFormat.for(parent);
     });
 
@@ -119,10 +119,10 @@ describe('DocViewerFormat', () => {
   describe('when language is JSON', () => {
     beforeEach(() => {
       document.body.innerHTML = `
-        <table><tr><td><div class="doc-viewer-value">{"shipment": {"to_location": {"first_name": "John", "last_name": "Doe"}}}</div></td></tr></table>
+        <table><tr><td><div class="kbnDocViewer__value"><span>{"shipment": {"to_location": {"first_name": "John", "last_name": "Doe"}}}</span></div></td></tr></table>
       `;
       parent = document.querySelector('td');
-      element = document.querySelector('div');
+      element = document.querySelector('span');
       DocViewerFormat.for(parent);
     });
 
@@ -151,12 +151,12 @@ describe('DocViewerFormat', () => {
   describe('when language is marked', () => {
     beforeEach(() => {
       document.body.innerHTML = `
-        <table><tr><td><div class="doc-viewer-value">
+        <table><tr><td><div class="kbnDocViewer__value"><span>
         {"shipment" => {"to_location": {"first_name": "<mark>John</mark>", "middle_name": "<mark>John</mark>", "last_name": "Johnson", "<mark>age</mark>": <mark>23</mark>, "street1" : "123 <mark>last</mark> ln"}}}
-        </div></td></tr></table>
+        </span></div></td></tr></table>
       `;
       parent = document.querySelector('td');
-      element = document.querySelector('div');
+      element = document.querySelector('span');
       DocViewerFormat.for(parent);
     });
 
@@ -170,10 +170,10 @@ describe('DocViewerFormat', () => {
   describe('when language is auto', () => {
     beforeEach(() => {
       document.body.innerHTML = `
-        <table><tr><td><div class="doc-viewer-value">Hello, world!</div></td></tr></table>
+        <table><tr><td><div class="kbnDocViewer__value"><span>Hello, world!</span></div></td></tr></table>
       `;
       parent = document.querySelector('td');
-      element = document.querySelector('div');
+      element = document.querySelector('span');
       DocViewerFormat.for(parent);
     });
 

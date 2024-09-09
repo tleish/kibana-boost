@@ -54,7 +54,7 @@
     handleNewChildren(mutationsList) {
       for (let mutation of mutationsList) {
         if (mutation.type === "childList" && mutation.addedNodes.length > 0) {
-          this.applyNewChildrenCallback([...mutation.target.querySelectorAll(".doc-viewer-value > span")]);
+          this.applyNewChildrenCallback([...mutation.target.querySelectorAll(".kbnDocViewer__value > span")]);
         }
       }
     }
@@ -106,7 +106,7 @@
   var _DocViewerFormat = class {
     static for(parent) {
       const highlights = [...new Set(parent.querySelectorAll("mark"))].map((mark) => mark.textContent);
-      const docViewerValue = parent.querySelector(".doc-viewer-value");
+      const docViewerValue = parent.querySelector(".kbnDocViewer__value > span");
       const textContent = docViewerValue.textContent;
       let language = detectLanguage(textContent);
       const formatClass = _DocViewerFormat.formatClasses[language];
@@ -118,7 +118,7 @@
     }
     constructor(parent) {
       this.parent = parent;
-      this.element = parent.querySelector(".doc-viewer-value");
+      this.element = parent.querySelector(".kbnDocViewer__value > span");
     }
     apply() {
       this.parent.classList.add(`parent-language-${this.constructor.languageFormatting}`);
@@ -261,7 +261,7 @@
   __publicField(ExpandButton, "toolTipText", "Show More");
   var CopyButton = class extends Button {
     clickHandler(_event) {
-      const value = this.parent.querySelector(".doc-viewer-value").textContent.trim();
+      const value = this.parent.querySelector(".kbnDocViewer__value").textContent.trim();
       navigator.clipboard.writeText(value).then(() => {
         this.copiedStatus(value);
         setTimeout(() => this.resetStatus(), 1e3);
@@ -306,53 +306,44 @@
       this.button = this.createButton();
     }
     createButton() {
-      const icon = document.createElement("i");
-      icon.classList.add("fa", "fa-download");
       const button = document.createElement("button");
       button.id = this.buttonId;
       button.textContent = this.buttonText;
-      button.classList.add("euiLink", "euiLink--primary");
+      button.classList.add("kuiLocalMenuItem");
       button.addEventListener("click", this.onClickCallback);
-      button.appendChild(icon);
       return button;
     }
   };
 
-  // src/lib/PanelObserver.js
-  var PanelObserver = class {
-    constructor(targetSelector, textContent, callback) {
-      this.targetSelector = targetSelector;
-      this.textContent = textContent;
-      this.callback = callback;
-      this.observer = null;
-    }
-    init() {
-      this.createObserver();
-      this.startObserving();
-      this.checkForPanel();
-    }
-    createObserver() {
+  // src/lib/NavRowButtons.js
+  var NavRowButtons = class {
+    constructor() {
+      this.buttons = [];
       this.observer = new MutationObserver((mutationsList) => {
-        for (let mutation of mutationsList) {
+        for (const mutation of mutationsList) {
           if (mutation.type === "childList") {
-            this.checkForPanel();
+            const menu = document.querySelector(".kuiLocalNavRow");
+            let menuButton;
+            if (menu) {
+              this.buttons.forEach(({ button, afterButton }) => {
+                menuButton = document.querySelector(afterButton);
+                if (document.querySelector(`#${button.id}`) || !menuButton) {
+                  return;
+                }
+                menuButton.parentNode.insertBefore(button, menuButton.nextSibling);
+              });
+              this.observer.disconnect();
+              break;
+            }
           }
         }
       });
     }
-    startObserving() {
-      const config = { childList: true, subtree: true };
-      this.observer.observe(document.body, config);
+    observe() {
+      this.observer.observe(document.body, { childList: true, subtree: true });
     }
-    checkForPanel() {
-      const panel = this.findPanel();
-      if (panel) {
-        this.callback(panel);
-        this.observer.disconnect();
-      }
-    }
-    findPanel() {
-      return [...document.querySelectorAll(this.targetSelector)].filter((panel) => panel.textContent.includes(this.textContent))[0];
+    addButton(button, afterButton) {
+      this.buttons.push({ button, afterButton });
     }
   };
 
@@ -376,18 +367,31 @@
         return "";
       }
       const keys = Object.keys(data[0]);
+      if (keys.includes("@timestamp")) {
+        keys.unshift("timestamp_end");
+        keys.unshift("timestamp_start");
+      }
       const csvRows = [];
       csvRows.push(keys.join(","));
       data.forEach((item) => {
+        if (item["@timestamp"]) {
+          const timestamp_end = new Date(item["@timestamp"]);
+          const duration = item["duration"] || 0;
+          const timestamp_start = new Date(timestamp_end - duration * 1e3);
+          timestamp_start.setMinutes(timestamp_start.getMinutes() - timestamp_start.getTimezoneOffset());
+          timestamp_end.setMinutes(timestamp_end.getMinutes() - timestamp_end.getTimezoneOffset());
+          item["timestamp_start"] = timestamp_start.toISOString().replace("T", " ").replace("Z", "");
+          item["timestamp_end"] = timestamp_end.toISOString().replace("T", " ").replace("Z", "");
+        }
         const values = keys.map((key) => {
           let value = item[key];
           if (Array.isArray(value)) {
             value = value.join(",");
           }
           if (typeof value === "string") {
-            value = JsonToCsvConverter.escapeString(value);
+            value = escapeString(value);
           } else if (value !== null && typeof value === "object") {
-            value = JsonToCsvConverter.escapeObject(value);
+            value = escapeObject(value);
           }
           return value || "";
         });
@@ -395,18 +399,18 @@
       });
       return csvRows.join("\n");
     }
-    static escapeString(value) {
-      value = value.replace(/"/g, '""');
-      if (value.includes(",") || value.includes('"')) {
-        value = `"${value}"`;
-      }
-      return value;
-    }
-    static escapeObject(value) {
-      value = JSON.stringify(value).replace(/"/g, '""');
-      return `"${value}"`;
-    }
   };
+  function escapeString(value) {
+    value = value.replace(/"/g, '""');
+    if (value.includes(",") || value.includes('"')) {
+      value = `"${value}"`;
+    }
+    return value;
+  }
+  function escapeObject(value) {
+    value = JSON.stringify(value).replace(/"/g, '""');
+    return `"${value}"`;
+  }
 
   // src/lib/XHRListener.js
   var XHRListener = class {
@@ -456,7 +460,7 @@
   };
 
   // src/assets/style.css
-  var style_default = ".doc-viewer-value .whitespace-pre-wrap {\n  white-space: pre-wrap;\n}\n\n.doc-viewer-parent {\n  position: relative;\n  /*width: 100%;*/\n  /*white-space: normal!important;*/\n}\n\n.doc-viewer-parent .doc-viewer-buttons {\n  visibility: hidden;\n  position: -webkit-sticky; /* Safari */\n  position: absolute;\n  top: 4px;\n  right: 20px;\n  z-index: 1000;\n  display: flex;\n  flex-direction: row; /* This ensures the buttons are positioned horizontally */\n  justify-content: space-between; /* Optional: controls the spacing between buttons */\n  align-items: center; /* Optional: vertically aligns the buttons within the container */\n}\n\n.doc-viewer-parent .doc-viewer-buttons button {\n  position: relative;\n  line-height: 12px;\n  border-radius: 4px;\n  border: 1px solid #B5D8FF;\n  background-color: #FFF;\n  width: 22px;\n  height: 22px;\n  align-items: center;\n  justify-content: center;\n}\n\n.doc-viewer-parent .doc-viewer-buttons button svg {\n  width: 14px;\n  height: 14px;\n}\n\n.doc-viewer-parent .doc-viewer-buttons:hover {\n  background-color: white;\n}\n\n.doc-viewer-parent .doc-viewer-buttons:hover ~ .doc-viewer-value {\n  background-color: #B5D8FF;\n}\n\n.doc-viewer-parent:hover .doc-viewer-buttons {\n  visibility: visible;\n}\n\n.doc-viewer-parent .doc-viewer-button-expand {\n  display: none;\n}\n\n.doc-viewer-parent.collapsed .doc-viewer-value {\n  overflow: auto;\n  max-height: 200px;\n}\n\n.doc-viewer-value.language-xml,\n.doc-viewer-value.language-json {\n  width: 100%;\n}\n\n.doc-viewer-parent.parent-language-xml .doc-viewer-button-expand,\n.doc-viewer-parent.parent-language-json .doc-viewer-button-expand {\n  display: flex;\n}\n\n\n/* Tooltip text */\n.doc-viewer-button .tooltiptext {\n  visibility: hidden;\n  width: 70px;\n  top: 100%;\n  left: 50%;\n  margin-left: -30px; /* Use half of the width (120/2 = 60), to center the tooltip */\n  background-color: #474D4F;\n  color: #fff;\n  text-align: center;\n  padding: 5px 0;\n  border-radius: 6px;\n  font-size: 12px;\n\n  /* Position the tooltip text - see examples below! */\n  position: absolute;\n  z-index: 1;\n}\n\n\n/* Show the tooltip text when you mouse over the tooltip container */\n.doc-viewer-button:hover .tooltiptext {\n  visibility: visible;\n}\n\n.doc-viewer-button .tooltiptext:hover {\n  pointer-events: none; /* Prevent tooltip from affecting the hover state */\n}\n";
+  var style_default = ".kbnDocViewer__value .whitespace-pre-wrap {\n  white-space: pre-wrap;\n}\n\n.doc-viewer-parent {\n  position: relative;\n  /*width: 100%;*/\n  /*white-space: normal!important;*/\n}\n\n.doc-viewer-parent .doc-viewer-buttons {\n  visibility: hidden;\n  position: -webkit-sticky; /* Safari */\n  position: absolute;\n  top: 4px;\n  right: 20px;\n  z-index: 1000;\n  display: flex;\n  flex-direction: row; /* This ensures the buttons are positioned horizontally */\n  justify-content: space-between; /* Optional: controls the spacing between buttons */\n  align-items: center; /* Optional: vertically aligns the buttons within the container */\n}\n\n.doc-viewer-parent .doc-viewer-buttons button {\n  position: relative;\n  line-height: 12px;\n  border-radius: 4px;\n  border: 1px solid #B5D8FF;\n  background-color: #FFF;\n  width: 22px;\n  height: 22px;\n  align-items: center;\n  justify-content: center;\n}\n\n.doc-viewer-parent .doc-viewer-buttons button svg {\n  width: 14px;\n  height: 14px;\n}\n\n.doc-viewer-parent .doc-viewer-buttons:hover {\n  background-color: white;\n}\n\n.doc-viewer-parent .doc-viewer-buttons:hover ~ .kbnDocViewer__value,\n.doc-viewer-parent .doc-viewer-buttons:hover ~ .kbnDocViewer__value .hljs {\n  background-color: #B5D8FF;\n}\n\n.doc-viewer-parent:hover .doc-viewer-buttons {\n  visibility: visible;\n}\n\n.doc-viewer-parent .doc-viewer-button-expand {\n  display: none;\n}\n\n.doc-viewer-parent.collapsed .kbnDocViewer__value {\n  overflow: auto;\n  max-height: 200px;\n}\n\n.kbnDocViewer__value.language-xml,\n.kbnDocViewer__value.language-json {\n  width: 100%;\n}\n\n.doc-viewer-parent.parent-language-xml .doc-viewer-button-expand,\n.doc-viewer-parent.parent-language-json .doc-viewer-button-expand {\n  display: flex;\n}\n\n\n/* Tooltip text */\n.doc-viewer-button .tooltiptext {\n  visibility: hidden;\n  width: 70px;\n  top: 100%;\n  left: 50%;\n  margin-left: -30px; /* Use half of the width (120/2 = 60), to center the tooltip */\n  background-color: #474D4F;\n  color: #fff;\n  text-align: center;\n  padding: 5px 0;\n  border-radius: 6px;\n  font-size: 12px;\n\n  /* Position the tooltip text - see examples below! */\n  position: absolute;\n  z-index: 1;\n}\n\n.doc-viewer-button .fa-copy,\n.doc-viewer-button .fa-check,\n.doc-viewer-button .fa-search {\n  margin-left: -4px;\n}\n\n\n/* Show the tooltip text when you mouse over the tooltip container */\n.doc-viewer-button:hover .tooltiptext {\n  visibility: visible;\n}\n\n.doc-viewer-button .tooltiptext:hover {\n  pointer-events: none; /* Prevent tooltip from affecting the hover state */\n}\n";
 
   // src/index.js
   var discoverUrlPattern = "http://127.0.0.1:9200/_plugin/kibana/app/kibana#/discover";
@@ -492,18 +496,14 @@
     const dataStorage = new DataStorage(discoverResponseDataElement);
     const shouldIntercept = (url) => url.includes("/_plugin/kibana/elasticsearch/_msearch");
     new XHRListener(dataStorage, shouldIntercept);
-    const panelObserver = new PanelObserver(".kuiLocalDropdown", "Share saved search", (panel) => {
-      if (panel.querySelector("#download-discover-response-data")) {
-        return;
-      }
-      const buttonHandler = new ButtonHandler("download-discover-response-data", " Generate CSV ", () => {
-        const data = dataStorage.getData();
-        const csv = JsonToCsvConverter.convert(data);
-        CsvDownloader.download(csv);
-      });
-      panel.appendChild(buttonHandler.button);
+    const navRowButtons = new NavRowButtons();
+    const exportButton = new ButtonHandler("download-discover-response-data", " Export ", () => {
+      const data = dataStorage.getData();
+      const csv = JsonToCsvConverter.convert(data);
+      CsvDownloader.download(csv);
     });
-    panelObserver.init();
+    navRowButtons.addButton(exportButton.button, "button.kuiLocalMenuPanelTitle");
+    navRowButtons.observe();
   }
   function run() {
     runForDiscover();

@@ -2,13 +2,12 @@ import DocViewerObserver from './lib/DocViewerObserver'
 import DocViewerFormater from './lib/DocViewerFormat'
 import DocViewerButtons from './lib/DocViewerButtons'
 import ButtonHandler from "./lib/ButtonHandler";
-import PanelObserver from "./lib/PanelObserver";
+import NavRowButtons from "./lib/NavRowButtons";
 import CsvDownloader from "./lib/CsvDownloader";
 import JsonToCsvConverter from "./lib/JsonToCsvConverter";
 import XHRListener from "./lib/XHRListener";
 import DataStorage from "./lib/DataStorage";
 import css from './assets/style.css';
-
 
 const discoverUrlPattern = 'http://127.0.0.1:9200/_plugin/kibana/app/kibana#/discover';
 function runForDiscover() {
@@ -49,24 +48,18 @@ function initDiscoverDownloadCsv() {
 
   const dataStorage = new DataStorage(discoverResponseDataElement);
   const shouldIntercept = (url) => url.includes('/_plugin/kibana/elasticsearch/_msearch');
-  // new FetchInterceptor(dataStorage, shouldIntercept);
   new XHRListener(dataStorage, shouldIntercept);
 
-  // Create Download Button
-  const panelObserver = new PanelObserver('.kuiLocalDropdown', 'Share saved search', (panel) => {
-    // return if button already created
-    if (panel.querySelector('#download-discover-response-data')) {
-      return;
-    }
-    const buttonHandler = new ButtonHandler('download-discover-response-data', ' Generate CSV ', () => {
-      const data = dataStorage.getData();
-      const csv = JsonToCsvConverter.convert(data);
-      CsvDownloader.download(csv);
-    });
-    panel.appendChild(buttonHandler.button);
+  const navRowButtons = new NavRowButtons();
+
+  const exportButton = new ButtonHandler('download-discover-response-data', ' Export ', () => {
+    const data = dataStorage.getData();
+    const csv = JsonToCsvConverter.convert(data);
+    CsvDownloader.download(csv);
   });
 
-  panelObserver.init();
+  navRowButtons.addButton(exportButton.button, 'button.kuiLocalMenuPanelTitle');
+  navRowButtons.observe();
 }
 
 function run() {

@@ -38,7 +38,7 @@ describe('DocViewerButtons.for', () => {
               </span>
             </td>
             <td class="doc-viewer-parent">
-              <div class="doc-viewer-value">
+              <div class="kbnDocViewer__value">
                 <span>my value</span>
               </div>
             </td>
@@ -47,7 +47,7 @@ describe('DocViewerButtons.for', () => {
     `;
 
     parent = document.querySelector('.doc-viewer-parent');
-    docViewValueElement = document.querySelector('.doc-viewer-value');
+    docViewValueElement = document.querySelector('.kbnDocViewer__value');
     span = docViewValueElement.querySelector('span');
     DocViewerButtons.for(parent);
     jest.useFakeTimers()

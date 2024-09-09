@@ -7,15 +7,11 @@ export default class ButtonHandler {
   }
 
   createButton() {
-    const icon = document.createElement('i');
-    icon.classList.add('fa', 'fa-download');
-
     const button = document.createElement('button');
     button.id = this.buttonId;
     button.textContent = this.buttonText;
-    button.classList.add('euiLink', 'euiLink--primary');
+    button.classList.add('kuiLocalMenuItem');
     button.addEventListener('click', this.onClickCallback);
-    button.appendChild(icon);
 
     return button;
   }
