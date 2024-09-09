@@ -57,11 +57,10 @@
 
 .doc-viewer-parent.collapsed .kbnDocViewer__value {
   overflow: auto;
-  max-height: 200px;
+  max-height: 300px;
 }
 
-.kbnDocViewer__value.language-xml,
-.kbnDocViewer__value.language-json {
+.kbnDocViewer__value {
   width: 100%;
 }
 

@@ -58,7 +58,7 @@ function initDiscoverDownloadCsv() {
     CsvDownloader.download(csv);
   });
 
-  navRowButtons.addButton(exportButton.button, 'button.kuiLocalMenuPanelTitle');
+  navRowButtons.addButton(exportButton.button, 'button.kuiLocalMenuItem[data-test-subj="shareTopNavButton"]');
   navRowButtons.observe();
 }
 

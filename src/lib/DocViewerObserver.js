@@ -35,12 +35,23 @@ export default class DocViewerObserver {
     }
   }
 
+
   handleNewChildren(mutationsList) {
     for (let mutation of mutationsList) {
       if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+        this.observeDocViewer(mutation.target);
         this.applyNewChildrenCallback([...mutation.target.querySelectorAll('.kbnDocViewer__value > span')])
       }
     }
+  }
+
+  observeDocViewer(parentElement) {
+    const element = parentElement.querySelector('.kbnDocViewer__content');
+    if (!element) {
+      return;
+    }
+    
+    this.observeElement(element);
   }
 
   applyNewChildrenCallback(elements) {
