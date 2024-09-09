@@ -14,9 +14,9 @@ Welcome to the Kibana-Boost Tampermonkey User Script repository! This script enh
 
 3. **Collapse large blocks of data***
     - Initially collapses large blocks of data, but includes a button to collapse or expand making it easier to navigate through large results.
-        - 
+
 4. **Download Results to CSV**
-    - Adds a link under the Share menu that lets users download the current search results as a CSV file.
+    - Adds button at the top of Discover to export current search results as a CSV file.
 
 ### Installation
 
