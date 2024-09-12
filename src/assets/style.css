@@ -104,3 +104,8 @@
 .doc-viewer-button .tooltiptext:hover {
   pointer-events: none; /* Prevent tooltip from affecting the hover state */
 }
+
+.auto-link {
+  text-decoration: underline;
+}
+

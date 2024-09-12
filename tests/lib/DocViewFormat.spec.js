@@ -185,4 +185,19 @@ describe('DocViewerFormat', () => {
       expect(element.classList.contains('collapsed')).toBeFalsy();
     });
   });
+
+  describe('when value includes URL', () => {
+    beforeEach(() => {
+      document.body.innerHTML = `
+        <table><tr><td><div class="kbnDocViewer__value"><span>This is a <span id="keeps_html">test</span> of a https://anything.s3.amazonaws.com/file.png and <span>https://track.easypost.com/ABC12</span> other link</span></div></td></tr></table>
+      `;
+      parent = document.querySelector('td');
+      element = document.querySelector('span');
+      DocViewerFormat.for(parent);
+    });
+
+    it('replaces multiple ULRs', () => {
+      expect(element.innerHTML).toBe('This is a <span id="keeps_html">test</span> of a <a href="https://anything.s3.amazonaws.com/file.png" class="auto-link" target="_blank">https://anything.s3.amazonaws.com/file.png</a> and <span><a href="https://track.easypost.com/ABC12" class="auto-link" target="_blank">https://track.easypost.com/ABC12</a></span> other link');
+    });
+  });
 });

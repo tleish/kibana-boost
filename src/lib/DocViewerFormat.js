@@ -16,6 +16,9 @@ export default class DocViewerFormat {
     highlights.forEach(highlight => {
       docViewerValue.innerHTML = docViewerValue.innerHTML.replace(new RegExp(`\\b${highlight}\\b`, 'g'), `<mark>${highlight}</mark>`);
     });
+
+    // should be after all above formatting
+    UrlFormat.for(parent);
   }
 
   static languageFormatting = 'auto';
@@ -86,6 +89,29 @@ class RubyHashToJsonFormat extends JsonFormat {
       console.error(jsonString);
       return rubyHashStr;
     }
+  }
+}
+
+// https://track.easypost.com/ABC123
+// https://ehub-prod.s3.amazonaws.com/ABC123
+
+
+class UrlFormat {
+  static URL_PATTERN = /(https:\/\/(track\.easypost\.com|[\w.-]+\.s3[\w.-]*\.amazonaws\.com)[^\s<>"]*)/g;
+  static for(parent) {
+    const format = new UrlFormat(parent);
+    format.apply();
+  }
+
+  constructor(parent) {
+    this.parent = parent;
+    this.element = parent.querySelector('.kbnDocViewer__value > span');
+  }
+
+  apply() {
+    this.element.innerHTML = this.element.innerHTML.replace(UrlFormat.URL_PATTERN, (url) => {
+      return `<a href="${url}" class="auto-link" target="_blank">${url}</a>`;
+    });
   }
 }
 

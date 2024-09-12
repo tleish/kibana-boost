@@ -2,7 +2,7 @@ const esbuild = require('esbuild');
 const path = require('path');
 const fs = require('fs');
 
-const VERSION = '0.3.0'
+const VERSION = '0.4.0'
 
 const cssStringPlugin = {
   name: 'css-string',
