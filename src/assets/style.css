@@ -42,6 +42,11 @@
   background-color: white;
 }
 
+tr[data-test-subj^="tableDocViewRow"]:hover,
+tr[data-test-subj^="tableDocViewRow"]:hover .hljs {
+  background-color: #EEE;
+}
+
 .doc-viewer-parent .doc-viewer-buttons:hover ~ .kbnDocViewer__value,
 .doc-viewer-parent .doc-viewer-buttons:hover ~ .kbnDocViewer__value .hljs {
   background-color: #B5D8FF;

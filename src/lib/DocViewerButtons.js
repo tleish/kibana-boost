@@ -125,7 +125,9 @@ class NewFilterButton extends Button {
     [...removeFilterButtons].slice(0, -1).reverse().forEach(button => button.click());
 
     const url = new URL(window.location);
-    const href = url.href.replace(/,query:\(language:lucene,query:'[^']+'\)/, '');
+    // http://127.0.0.1:9200/_plugin/kibana/app/kibana#/discover?_g=()&_a=(columns:!(email),filters:!(('$state':(store:appState),meta:(alias:!n,disabled:!f,index:'155fb710-1370-11e9-859e-35ec3c707e4d',key:action,negate:!f,params:(query:create_and_ship,type:phrase),type:phrase,value:create_and_ship),query:(match:(action:(query:create_and_ship,type:phrase))))),index:'155fb710-1370-11e9-859e-35ec3c707e4d',interval:auto,query:(language:lucene,query:label_image),sort:!('@timestamp',desc))
+    // http://127.0.0.1:9200/_plugin/kibana/app/kibana#/discover?_g=()&_a=(columns:!(email),filters:!(('$state':(store:appState),meta:(alias:!n,disabled:!f,index:'155fb710-1370-11e9-859e-35ec3c707e4d',key:request_id,negate:!f,params:(query:'5f951ade-2995-4874-9f31-586d0c51aac3',type:phrase),type:phrase,value:'5f951ade-2995-4874-9f31-586d0c51aac3'),query:(match:(request_id:(query:'5f951ade-2995-4874-9f31-586d0c51aac3',type:phrase))))),index:'155fb710-1370-11e9-859e-35ec3c707e4d',interval:auto,query:(language:lucene,query:label_image),sort:!('@timestamp',desc))
+    const href = url.href.replace(/,query:\(language:lucene,query:[^\)]+\)/, '');
 
     history.go(removeFilterButtons.length * -1);
     GM_openInTab(href, { active: true });
