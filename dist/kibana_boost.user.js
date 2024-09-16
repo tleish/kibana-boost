@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kibana Boost
 // @namespace    https://github.com/tleish/
-// @version      0.5.0
+// @version      0.6.0
 // @updateURL    https://github.com/tleish/kibana-boost/raw/main/dist/kibana_boost.meta.js
 // @downloadURL  https://github.com/tleish/kibana-boost/raw/main/dist/kibana_boost.user.js
 // @description  Updates Kibana view
