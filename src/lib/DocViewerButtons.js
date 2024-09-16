@@ -4,7 +4,7 @@ export default class DocViewerButtons {
       (new ExpandButton(parent)).element,
       (new CopyButton(parent)).element,
       (new NewFilterButton(parent)).element
-    ];
+    ].filter(button => button !== null);
     const docViewerButtons = new DocViewerButtons(buttons);
     parent.insertBefore(docViewerButtons.element, parent.firstChild);
   }
@@ -70,7 +70,17 @@ class ExpandButton extends Button {
   static toolTipText = 'Show More';
 
   get element() {
+    const docViewerHeight = this.parent.querySelector('.kbnDocViewer__value').clientHeight;
+    if(docViewerHeight <= 300) {
+      return null;
+    }
+
     this.parent.classList.add('collapsed');
+    this.parent.closest('tr').addEventListener('dblclick', (event) => {
+      if (window.getSelection().toString().length === 0) {
+        this.clickHandler(event)
+      }
+    });
     return super.element;
   }
 
@@ -91,7 +101,9 @@ class CopyButton extends Button {
   static toolTipText = 'Copy';
 
   clickHandler(_event) {
-    const value = this.parent.querySelector('.kbnDocViewer__value').textContent.trim();
+    const clonedElement = this.parent.querySelector('.kbnDocViewer__value').cloneNode(true)
+    clonedElement.querySelectorAll('.ignore-text').forEach(el => el.remove());
+    const value = clonedElement.textContent.trim();
     navigator.clipboard.writeText(value).then(() => {
       this.copiedStatus(value);
       setTimeout(() => this.resetStatus(), 1000);

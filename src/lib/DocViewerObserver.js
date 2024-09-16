@@ -1,5 +1,8 @@
+const test = {eachNewChildrenCallback: [], newChildrenCallback: 12};
+
 export default class DocViewerObserver {
-  constructor(newChildrenCallback) {
+  constructor({eachNewChildrenCallback, newChildrenCallback}) {
+    this.eachNewChildrenCallback = eachNewChildrenCallback;
     this.newChildrenCallback = newChildrenCallback;
     this.parentObserver = new MutationObserver(() => this.observeNewElements());
   }
@@ -40,7 +43,9 @@ export default class DocViewerObserver {
     for (let mutation of mutationsList) {
       if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
         this.observeDocViewer(mutation.target);
-        this.applyNewChildrenCallback([...mutation.target.querySelectorAll('.kbnDocViewer__value > span')])
+        const children = [...mutation.target.querySelectorAll('.kbnDocViewer__value > span')];
+        this.applyEachNewChildrenCallback(children)
+        this.applyNewChildrenCallback(children[0]);
       }
     }
   }
@@ -54,7 +59,7 @@ export default class DocViewerObserver {
     this.observeElement(element);
   }
 
-  applyNewChildrenCallback(elements) {
+  applyEachNewChildrenCallback(elements) {
     elements.forEach((element) => {
       const parent = element.closest('td');
       if (parent.classList.contains('doc-viewer-parent')) {
@@ -62,7 +67,12 @@ export default class DocViewerObserver {
       }
       parent.classList.add('doc-viewer-parent');
 
-      this.newChildrenCallback(parent);
+      this.eachNewChildrenCallback(parent);
     });
+  }
+  applyNewChildrenCallback(element) {
+    if(!element) return;
+
+    this.newChildrenCallback(element.closest('.kbnDocViewer__content'));
   }
 }

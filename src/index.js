@@ -25,13 +25,27 @@ function runForDiscover() {
       src: 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js',
       type: 'text/javascript'
     });
-    GM_addStyle(css);
+
+    // Make sure to add CSS after all other styles
+    const observer = new MutationObserver((mutationsList, observer) => {
+      // Check if the element with id 'kibana-body' has been added
+      const kibanaBody = document.getElementById('kibana-body');
+      if (kibanaBody) {
+        observer.disconnect(); // Stop observing once the element is found
+        GM_addStyle(css);
+      }
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
   }
 
+  // {eachNewChildrenCallback, newChildrenCallback}
 
-  (new DocViewerObserver((parent) => {
-    DocViewerFormater.for(parent)
-    DocViewerButtons.for(parent);
+  (new DocViewerObserver({
+    eachNewChildrenCallback: (parent) => {
+      DocViewerFormater.each(parent)
+      DocViewerButtons.for(parent);
+    },
+    newChildrenCallback: DocViewerFormater.for
   })).start();
 }
 
@@ -62,9 +76,24 @@ function initDiscoverDownloadCsv() {
   navRowButtons.observe();
 }
 
+
+let isDocRowToggling = false;
+
 function run() {
   runForDiscover();
   initDiscoverDownloadCsv();
+
+  document.addEventListener('dblclick', (event) => {
+    const docRow = event.target.closest('.kbnDocTable__row');
+    const docViewer = event.target.closest('.kbnDocViewer__value');
+
+    if (window.getSelection().toString().length === 0 && !docViewer && docRow && !isDocRowToggling) {
+      isDocRowToggling = true;
+      docRow.querySelector('[data-test-subj="docTableExpandToggleColumn"]').click();
+
+      setTimeout(() => { isDocRowToggling = false; }, 100); // Adjust delay time as needed
+    }
+  });
 }
 
 // Check the URL immediately

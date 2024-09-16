@@ -12,11 +12,20 @@ Welcome to the Kibana-Boost Tampermonkey User Script repository! This script enh
 2. **Copy Button for Discover Results**
     - Adds a convenient copy button next to each result in the Discover tab, allowing you to easily copy single values.
 
-3. **Collapse large blocks of data***
-    - Initially collapses large blocks of data, but includes a button to collapse or expand making it easier to navigate through large results.
+3. **Collapse/Expand large blocks of data***
+   - Initially collapses large blocks of data, but includes a button to collapse or expand making it easier to navigate through large results.
+   - Double click  
 
 4. **Download Results to CSV**
     - Adds button at the top of Discover to export current search results as a CSV file.
+
+5. **Format Values**
+    - Adds ms or bytes to some values for clarity
+
+6. **Hyperlinks**
+    - Converts URLs to clickable hyperlinks
+    - Adds link to eHub customer
+    - Adds link lookup for reverse IP Address lookup
 
 ### Installation
 

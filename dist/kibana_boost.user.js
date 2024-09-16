@@ -21,7 +21,8 @@
 
   // src/lib/DocViewerObserver.js
   var DocViewerObserver = class {
-    constructor(newChildrenCallback) {
+    constructor({ eachNewChildrenCallback, newChildrenCallback }) {
+      this.eachNewChildrenCallback = eachNewChildrenCallback;
       this.newChildrenCallback = newChildrenCallback;
       this.parentObserver = new MutationObserver(() => this.observeNewElements());
     }
@@ -55,7 +56,9 @@
       for (let mutation of mutationsList) {
         if (mutation.type === "childList" && mutation.addedNodes.length > 0) {
           this.observeDocViewer(mutation.target);
-          this.applyNewChildrenCallback([...mutation.target.querySelectorAll(".kbnDocViewer__value > span")]);
+          const children = [...mutation.target.querySelectorAll(".kbnDocViewer__value > span")];
+          this.applyEachNewChildrenCallback(children);
+          this.applyNewChildrenCallback(children[0]);
         }
       }
     }
@@ -66,15 +69,20 @@
       }
       this.observeElement(element);
     }
-    applyNewChildrenCallback(elements) {
+    applyEachNewChildrenCallback(elements) {
       elements.forEach((element) => {
         const parent = element.closest("td");
         if (parent.classList.contains("doc-viewer-parent")) {
           return;
         }
         parent.classList.add("doc-viewer-parent");
-        this.newChildrenCallback(parent);
+        this.eachNewChildrenCallback(parent);
       });
+    }
+    applyNewChildrenCallback(element) {
+      if (!element)
+        return;
+      this.newChildrenCallback(element.closest(".kbnDocViewer__content"));
     }
   };
 
@@ -112,7 +120,7 @@
 
   // src/lib/DocViewerFormat.js
   var _DocViewerFormat = class {
-    static for(parent) {
+    static each(parent) {
       const highlights = [...new Set(parent.querySelectorAll("mark"))].map((mark) => mark.textContent);
       const docViewerValue = parent.querySelector(".kbnDocViewer__value > span");
       const textContent = docViewerValue.textContent;
@@ -120,10 +128,17 @@
       const formatClass = _DocViewerFormat.formatClasses[language];
       const format = new formatClass(parent);
       format.apply();
+      UrlFormat.for(parent);
+      JsonCustomerIdFormat.for(parent);
       highlights.forEach((highlight) => {
         docViewerValue.innerHTML = docViewerValue.innerHTML.replace(new RegExp(`\\b${highlight}\\b`, "g"), `<mark>${highlight}</mark>`);
       });
-      UrlFormat.for(parent);
+    }
+    static for(parent) {
+      IpLookupFormat.for(parent);
+      CustomerIdFormat.for(parent);
+      MillisecondFormat.for(parent);
+      BytesFormat.for(parent);
     }
     constructor(parent) {
       this.parent = parent;
@@ -204,6 +219,108 @@
   };
   var UrlFormat = _UrlFormat;
   __publicField(UrlFormat, "URL_PATTERN", /(https:\/\/(track\.easypost\.com|[\w.-]+\.s3[\w.-]*\.amazonaws\.com)[^\s<>"]*)/g);
+  var _JsonCustomerIdFormat = class {
+    static for(parent) {
+      const format = new _JsonCustomerIdFormat(parent);
+      format.apply();
+    }
+    constructor(parent) {
+      this.parent = parent;
+      this.element = parent.querySelector(".kbnDocViewer__value > span");
+    }
+    apply() {
+      this.element.innerHTML = this.element.innerHTML.replace(_JsonCustomerIdFormat.JSON_PATTERN, (match, before, customerId, after) => {
+        return `${before}"<a href="https://app.ehub.com/home/index?customer_id=${customerId}" class="auto-link" target="_blank">${customerId}</a>"${after}`;
+      });
+      this.element.innerHTML = this.element.innerHTML.replace(_JsonCustomerIdFormat.PATH_PATTERN, (match, before, customerId, after) => {
+        return `${before}<a href="https://app.ehub.com/home/index?customer_id=${customerId}" class="auto-link" target="_blank">${customerId}</a>${after}`;
+      });
+    }
+  };
+  var JsonCustomerIdFormat = _JsonCustomerIdFormat;
+  __publicField(JsonCustomerIdFormat, "JSON_PATTERN", /(<span class="hljs-attr">"customer_id"<\/span>\s*<span class="hljs-punctuation">:<\/span>\s*<span class="hljs-string">)"(\d+)"(<\/span>)/g);
+  __publicField(JsonCustomerIdFormat, "PATH_PATTERN", /(\/customers\/)(\d+)(\/)/g);
+  var _IpLookupFormat = class {
+    static for(parent) {
+      const format = new _IpLookupFormat(parent);
+      format.apply();
+    }
+    constructor(parent) {
+      this.parent = parent;
+      this.element = parent.querySelector('tr[data-test-subj="tableDocViewRow-ip"] .kbnDocViewer__value > span');
+    }
+    apply() {
+      if (!this.element)
+        return;
+      this.element.innerHTML = this.element.innerHTML.replace(_IpLookupFormat.PATTERN, (ip) => {
+        return `<a href="https://search.dnslytics.com/ip/${ip}" class="auto-link" target="_blank">${ip}</a>`;
+      });
+    }
+  };
+  var IpLookupFormat = _IpLookupFormat;
+  __publicField(IpLookupFormat, "PATTERN", /(?:[0-9]{1,3}\.){3}[0-9]{1,3}/g);
+  var CustomerIdFormat = class {
+    static for(parent) {
+      const format = new CustomerIdFormat(parent);
+      format.apply();
+    }
+    constructor(parent) {
+      this.parent = parent;
+      this.element = parent.querySelector('tr[data-test-subj="tableDocViewRow-customer_id"] .kbnDocViewer__value > span');
+    }
+    apply() {
+      if (!this.element)
+        return;
+      const customerId = parseInt(this.element.textContent);
+      if (isNaN(customerId))
+        return this.element.textContent;
+      this.element.innerHTML = `<a href="https://app.ehub.com/home/index?customer_id=${customerId}" class="auto-link" target="_blank">${customerId}</a>`;
+    }
+  };
+  var _MillisecondFormat = class {
+    static for(parent) {
+      const format = new _MillisecondFormat(parent);
+      format.apply();
+    }
+    constructor(parent) {
+      this.parent = parent;
+      this.elements = _MillisecondFormat.TYPES.map((type) => parent.querySelector(`tr[data-test-subj="tableDocViewRow-${type}"] .kbnDocViewer__value > span`)).filter((item) => item !== null);
+    }
+    apply() {
+      if (this.elements.length === 0)
+        return;
+      this.elements.forEach((element) => {
+        const value = parseFloat(element.textContent);
+        if (isNaN(value))
+          return;
+        element.innerHTML = `${value}<span class="ignore-text kibana-boost-gray-400">ms</span>`;
+      });
+    }
+  };
+  var MillisecondFormat = _MillisecondFormat;
+  __publicField(MillisecondFormat, "TYPES", ["duration", "db", "elapsed_time", "server_time", "view"]);
+  var _BytesFormat = class {
+    static for(parent) {
+      const format = new _BytesFormat(parent);
+      format.apply();
+    }
+    constructor(parent) {
+      this.parent = parent;
+      this.elements = _BytesFormat.TYPES.map((type) => parent.querySelector(`tr[data-test-subj="tableDocViewRow-${type}"] .kbnDocViewer__value > span`)).filter((item) => item !== null);
+    }
+    apply() {
+      if (this.elements.length === 0)
+        return;
+      this.elements.forEach((element) => {
+        const value = parseFloat(element.textContent);
+        if (isNaN(value))
+          return;
+        element.innerHTML = `${value}<span class="ignore-text kibana-boost-gray-400"> bytes</span>`;
+      });
+    }
+  };
+  var BytesFormat = _BytesFormat;
+  __publicField(BytesFormat, "TYPES", ["_size"]);
   DocViewerFormat.formatClasses[AutoFormat.languageFormatting] = AutoFormat;
   DocViewerFormat.formatClasses[XmlFormat.languageFormatting] = XmlFormat;
   DocViewerFormat.formatClasses[JsonFormat.languageFormatting] = JsonFormat;
@@ -216,7 +333,7 @@
         new ExpandButton(parent).element,
         new CopyButton(parent).element,
         new NewFilterButton(parent).element
-      ];
+      ].filter((button) => button !== null);
       const docViewerButtons = new DocViewerButtons(buttons);
       parent.insertBefore(docViewerButtons.element, parent.firstChild);
     }
@@ -269,7 +386,16 @@
   __publicField(Button, "toolTipText", "");
   var ExpandButton = class extends Button {
     get element() {
+      const docViewerHeight = this.parent.querySelector(".kbnDocViewer__value").clientHeight;
+      if (docViewerHeight <= 300) {
+        return null;
+      }
       this.parent.classList.add("collapsed");
+      this.parent.closest("tr").addEventListener("dblclick", (event) => {
+        if (window.getSelection().toString().length === 0) {
+          this.clickHandler(event);
+        }
+      });
       return super.element;
     }
     clickHandler() {
@@ -287,7 +413,9 @@
   __publicField(ExpandButton, "toolTipText", "Show More");
   var CopyButton = class extends Button {
     clickHandler(_event) {
-      const value = this.parent.querySelector(".kbnDocViewer__value").textContent.trim();
+      const clonedElement = this.parent.querySelector(".kbnDocViewer__value").cloneNode(true);
+      clonedElement.querySelectorAll(".ignore-text").forEach((el) => el.remove());
+      const value = clonedElement.textContent.trim();
       navigator.clipboard.writeText(value).then(() => {
         this.copiedStatus(value);
         setTimeout(() => this.resetStatus(), 1e3);
@@ -486,7 +614,7 @@
   };
 
   // src/assets/style.css
-  var style_default = '.kbnDocViewer__value .whitespace-pre-wrap {\n  white-space: pre-wrap;\n}\n\n.doc-viewer-parent {\n  position: relative;\n  /*width: 100%;*/\n  /*white-space: normal!important;*/\n}\n\n.doc-viewer-parent .doc-viewer-buttons {\n  visibility: hidden;\n  position: -webkit-sticky; /* Safari */\n  position: absolute;\n  top: 4px;\n  right: 20px;\n  z-index: 1000;\n  display: flex;\n  flex-direction: row; /* This ensures the buttons are positioned horizontally */\n  justify-content: space-between; /* Optional: controls the spacing between buttons */\n  align-items: center; /* Optional: vertically aligns the buttons within the container */\n}\n\n.doc-viewer-parent .doc-viewer-buttons button {\n  position: relative;\n  line-height: 12px;\n  border-radius: 4px;\n  border: 1px solid #B5D8FF;\n  background-color: #FFF;\n  width: 22px;\n  height: 22px;\n  align-items: center;\n  justify-content: center;\n}\n\n.doc-viewer-parent .doc-viewer-buttons button svg {\n  width: 14px;\n  height: 14px;\n}\n\n.doc-viewer-parent .doc-viewer-buttons:hover {\n  background-color: white;\n}\n\ntr[data-test-subj^="tableDocViewRow"]:hover,\ntr[data-test-subj^="tableDocViewRow"]:hover .hljs {\n  background-color: #EEE;\n}\n\n.doc-viewer-parent .doc-viewer-buttons:hover ~ .kbnDocViewer__value,\n.doc-viewer-parent .doc-viewer-buttons:hover ~ .kbnDocViewer__value .hljs {\n  background-color: #B5D8FF;\n}\n\n.doc-viewer-parent:hover .doc-viewer-buttons {\n  visibility: visible;\n}\n\n.doc-viewer-parent .doc-viewer-button-expand {\n  display: none;\n}\n\n.doc-viewer-parent.collapsed .kbnDocViewer__value {\n  overflow: auto;\n  max-height: 300px;\n}\n\n.kbnDocViewer__value {\n  width: 100%;\n}\n\n.doc-viewer-parent.parent-language-xml .doc-viewer-button-expand,\n.doc-viewer-parent.parent-language-json .doc-viewer-button-expand {\n  display: flex;\n}\n\n\n/* Tooltip text */\n.doc-viewer-button .tooltiptext {\n  visibility: hidden;\n  width: 70px;\n  top: 100%;\n  left: 50%;\n  margin-left: -30px; /* Use half of the width (120/2 = 60), to center the tooltip */\n  background-color: #474D4F;\n  color: #fff;\n  text-align: center;\n  padding: 5px 0;\n  border-radius: 6px;\n  font-size: 12px;\n\n  /* Position the tooltip text - see examples below! */\n  position: absolute;\n  z-index: 1;\n}\n\n.doc-viewer-button .fa-copy,\n.doc-viewer-button .fa-check,\n.doc-viewer-button .fa-search {\n  margin-left: -4px;\n}\n\n\n/* Show the tooltip text when you mouse over the tooltip container */\n.doc-viewer-button:hover .tooltiptext {\n  visibility: visible;\n}\n\n.doc-viewer-button .tooltiptext:hover {\n  pointer-events: none; /* Prevent tooltip from affecting the hover state */\n}\n\n.auto-link {\n  text-decoration: underline;\n}\n\n';
+  var style_default = '.kbnDocViewer__value .whitespace-pre-wrap {\n  white-space: pre-wrap;\n}\n\n.doc-viewer-parent {\n  position: relative;\n  /*width: 100%;*/\n  /*white-space: normal!important;*/\n}\n\n.doc-viewer-parent .doc-viewer-buttons {\n  visibility: hidden;\n  position: -webkit-sticky; /* Safari */\n  position: absolute;\n  top: 4px;\n  right: 20px;\n  z-index: 1000;\n  display: flex;\n  flex-direction: row; /* This ensures the buttons are positioned horizontally */\n  justify-content: space-between; /* Optional: controls the spacing between buttons */\n  align-items: center; /* Optional: vertically aligns the buttons within the container */\n}\n\n.doc-viewer-parent .doc-viewer-buttons button {\n  position: relative;\n  line-height: 12px;\n  border-radius: 4px;\n  border: 1px solid #B5D8FF;\n  background-color: #FFF;\n  width: 22px;\n  height: 22px;\n  align-items: center;\n  justify-content: center;\n}\n\n.doc-viewer-parent .doc-viewer-buttons button svg {\n  width: 14px;\n  height: 14px;\n}\n\n.doc-viewer-parent .doc-viewer-buttons:hover {\n  background-color: white;\n}\n\ntr[data-test-subj^="tableDocViewRow"]:hover,\ntr[data-test-subj^="tableDocViewRow"]:hover .hljs {\n  background-color: #f9fafb;\n}\n\n.doc-viewer-parent .doc-viewer-buttons:hover ~ .kbnDocViewer__value,\n.doc-viewer-parent .doc-viewer-buttons:hover ~ .kbnDocViewer__value .hljs {\n  background-color: #B5D8FF;\n}\n\n.doc-viewer-parent .doc-viewer-buttons:hover ~ .kbnDocViewer__value .ignore-text {\n  color: transparent;\n}\n\n.doc-viewer-parent:hover .doc-viewer-buttons {\n  visibility: visible;\n}\n\n.doc-viewer-parent.collapsed .kbnDocViewer__value {\n  overflow: auto;\n  max-height: 300px;\n}\n\n.kbnDocViewer__value {\n  width: 100%;\n}\n\n.doc-viewer-button {\n  display: flex!important;\n}\n\n/* Tooltip text */\n.doc-viewer-button .tooltiptext {\n  visibility: hidden;\n  width: 70px;\n  top: 100%;\n  left: 50%;\n  margin-left: -30px; /* Use half of the width (120/2 = 60), to center the tooltip */\n  background-color: #474D4F;\n  color: #fff;\n  text-align: center;\n  padding: 5px 0;\n  border-radius: 6px;\n  font-size: 12px;\n\n  /* Position the tooltip text - see examples below! */\n  position: absolute;\n  z-index: 1;\n}\n\n/*.doc-viewer-button .fa {*/\n/*  margin-left: -4px;*/\n/*}*/\n\n\n/* Show the tooltip text when you mouse over the tooltip container */\n.doc-viewer-button:hover .tooltiptext {\n  visibility: visible;\n}\n\n.doc-viewer-button .tooltiptext:hover {\n  pointer-events: none; /* Prevent tooltip from affecting the hover state */\n}\n\n.auto-link {\n  text-decoration: underline;\n}\n\n.kibana-boost-gray-400 {\n  color: #9ca3af;\n}\n';
 
   // src/index.js
   var discoverUrlPattern = "http://127.0.0.1:9200/_plugin/kibana/app/kibana#/discover";
@@ -503,11 +631,21 @@
         src: "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js",
         type: "text/javascript"
       });
-      GM_addStyle(style_default);
+      const observer = new MutationObserver((mutationsList, observer2) => {
+        const kibanaBody = document.getElementById("kibana-body");
+        if (kibanaBody) {
+          observer2.disconnect();
+          GM_addStyle(style_default);
+        }
+      });
+      observer.observe(document.body, { childList: true, subtree: true });
     }
-    new DocViewerObserver((parent) => {
-      DocViewerFormat.for(parent);
-      DocViewerButtons.for(parent);
+    new DocViewerObserver({
+      eachNewChildrenCallback: (parent) => {
+        DocViewerFormat.each(parent);
+        DocViewerButtons.for(parent);
+      },
+      newChildrenCallback: DocViewerFormat.for
     }).start();
   }
   function initDiscoverDownloadCsv() {
@@ -531,9 +669,21 @@
     navRowButtons.addButton(exportButton.button, 'button.kuiLocalMenuItem[data-test-subj="shareTopNavButton"]');
     navRowButtons.observe();
   }
+  var isDocRowToggling = false;
   function run() {
     runForDiscover();
     initDiscoverDownloadCsv();
+    document.addEventListener("dblclick", (event) => {
+      const docRow = event.target.closest(".kbnDocTable__row");
+      const docViewer = event.target.closest(".kbnDocViewer__value");
+      if (window.getSelection().toString().length === 0 && !docViewer && docRow && !isDocRowToggling) {
+        isDocRowToggling = true;
+        docRow.querySelector('[data-test-subj="docTableExpandToggleColumn"]').click();
+        setTimeout(() => {
+          isDocRowToggling = false;
+        }, 100);
+      }
+    });
   }
   run();
   window.addEventListener("hashchange", run, false);

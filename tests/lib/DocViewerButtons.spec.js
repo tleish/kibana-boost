@@ -38,8 +38,8 @@ describe('DocViewerButtons.for', () => {
               </span>
             </td>
             <td class="doc-viewer-parent">
-              <div class="kbnDocViewer__value">
-                <span>my value</span>
+              <div class="kbnDocViewer__value" style="height: 301px">
+                <span>1234.56<span class="ignore-text">ms</span></span>
               </div>
             </td>
         </tr>
@@ -49,6 +49,11 @@ describe('DocViewerButtons.for', () => {
     parent = document.querySelector('.doc-viewer-parent');
     docViewValueElement = document.querySelector('.kbnDocViewer__value');
     span = docViewValueElement.querySelector('span');
+    // jest
+    //   .spyOn(docViewValueElement, 'clientHeight', 'get')
+    //   .mockImplementation(() => 301);
+
+
     DocViewerButtons.for(parent);
     jest.useFakeTimers()
   });
@@ -62,8 +67,47 @@ describe('DocViewerButtons.for', () => {
     expect(parent.querySelector('.doc-viewer-buttons')).toBeTruthy();
   });
 
-  it('adds the expand button', () => {
-    expect(parent.querySelector('.doc-viewer-button-expand')).toBeTruthy();
+  describe('when docViewerHeight is more than 300', () => {
+    beforeEach(() => {
+      jest
+        .spyOn(docViewValueElement, 'clientHeight', 'get')
+        .mockImplementation(() => 301);
+
+      DocViewerButtons.for(parent);
+    });
+
+    it('adds the expand button when docViewerHeight is greater than 300', () => {
+      expect(parent.querySelector('.doc-viewer-button-expand')).toBeTruthy();
+    });
+
+    it('toggles the doc viewer', () => {
+      const button = parent.querySelector('.doc-viewer-button-expand')
+      const toolTip = button.querySelector('.tooltiptext');
+      const icon = button.querySelector('i');
+      parent.classList.add('collapsed');
+      button.click();
+      expect(parent.classList.contains('collapsed')).toBeFalsy();
+      expect(toolTip.textContent).toBe('Show Less');
+      expect(icon.classList.contains('fa-compress')).toBeTruthy();
+      button.click();
+      expect(parent.classList.contains('collapsed')).toBeTruthy();
+      expect(toolTip.textContent).toBe('Show More');
+      expect(icon.classList.contains('fa-expand')).toBeTruthy();
+    });
+  });
+
+  describe('when docViewerHeight is less than or equal to 300', () => {
+    beforeEach(() => {
+      jest
+        .spyOn(docViewValueElement, 'clientHeight', 'get')
+        .mockImplementation(() => 300);
+
+      DocViewerButtons.for(parent);
+    });
+
+    it('adds the expand button when docViewerHeight is greater than 300', () => {
+      expect(parent.querySelector('.doc-viewer-button-expand')).toBeFalsy();
+    });
   });
 
   it('adds the copy button', () => {
@@ -74,27 +118,12 @@ describe('DocViewerButtons.for', () => {
     expect(parent.querySelector('.doc-viewer-button-search')).toBeTruthy();
   });
 
-  it('toggles the doc viewer', () => {
-    const button = parent.querySelector('.doc-viewer-button-expand')
-    const toolTip = button.querySelector('.tooltiptext');
-    const icon = button.querySelector('i');
-    parent.classList.add('collapsed');
-    button.click();
-    expect(parent.classList.contains('collapsed')).toBeFalsy();
-    expect(toolTip.textContent).toBe('Show Less');
-    expect(icon.classList.contains('fa-compress')).toBeTruthy();
-    button.click();
-    expect(parent.classList.contains('collapsed')).toBeTruthy();
-    expect(toolTip.textContent).toBe('Show More');
-    expect(icon.classList.contains('fa-expand')).toBeTruthy();
-  });
-
   it('copies the value to the clipboard', async () => {
     const button = parent.querySelector('.doc-viewer-button-copy')
     const toolTip = button.querySelector('.tooltiptext');
     expect(toolTip.textContent).toBe('Copy');
     button.click();
-    expect(navigator.clipboard.writeText).toHaveBeenCalledWith('my value');
+    expect(navigator.clipboard.writeText).toHaveBeenCalledWith('1234.56');
     await waitFor(() => {
       expect(toolTip.textContent).toBe('Copied!');
     });

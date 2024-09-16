@@ -2,6 +2,7 @@ import DocViewerObserver from 'DocViewerObserver';
 
 describe('DocViewerObserver', () => {
   let newChildrenCallback;
+  let eachNewChildrenCallback;
   let docViewerObserver;
   let mutationObserverMock;
   let observeMock;
@@ -10,6 +11,7 @@ describe('DocViewerObserver', () => {
 
   beforeEach(() => {
     // Set up the callback function
+    eachNewChildrenCallback = jest.fn();
     newChildrenCallback = jest.fn();
 
     // Mock the MutationObserver and its methods
@@ -27,7 +29,7 @@ describe('DocViewerObserver', () => {
     global.MutationObserver = mutationObserverMock;
 
     // Instantiate the DocViewerObserver
-    docViewerObserver = new DocViewerObserver(newChildrenCallback);
+    docViewerObserver = new DocViewerObserver({eachNewChildrenCallback, newChildrenCallback});
   });
 
   afterEach(() => {
@@ -57,13 +59,16 @@ describe('DocViewerObserver', () => {
   });
 
   test('should handle new children and call the callback function', () => {
+    const rootElement = document.createElement('div');
+    rootElement.classList.add('kbnDocViewer__content');
     const parentElement = document.createElement('td');
     parentElement.classList.add('kbnDocViewer__value');
     const newElement = document.createElement('span');
     const spanElement = document.createElement('span');
     newElement.appendChild(spanElement);
     parentElement.appendChild(newElement);
-    document.body.appendChild(parentElement);
+    rootElement.appendChild(parentElement);
+    document.body.appendChild(rootElement);
 
     const mutation = {
       type: 'childList',
@@ -73,7 +78,8 @@ describe('DocViewerObserver', () => {
 
     docViewerObserver.handleNewChildren([mutation]);
 
-    expect(newChildrenCallback).toHaveBeenCalledWith(parentElement);
+    expect(eachNewChildrenCallback).toHaveBeenCalledWith(parentElement);
+    expect(newChildrenCallback).toHaveBeenCalledWith(rootElement);
   });
 
   test('should not call the callback function for already observed elements', () => {
@@ -91,13 +97,16 @@ describe('DocViewerObserver', () => {
   });
 
   test('should apply the callback to new child elements', () => {
+    const rootElement = document.createElement('div');
+    rootElement.classList.add('kbnDocViewer__content');
     const parentElement = document.createElement('td');
+    parentElement.classList.add('kbnDocViewer__value');
     const newElement = document.createElement('span');
-    newElement.classList.add('kbnDocViewer__value');
     const spanElement = document.createElement('span');
     newElement.appendChild(spanElement);
     parentElement.appendChild(newElement);
-    document.body.appendChild(parentElement);
+    rootElement.appendChild(parentElement);
+    document.body.appendChild(rootElement);
 
     const mutation = {
       type: 'childList',
@@ -108,7 +117,8 @@ describe('DocViewerObserver', () => {
     docViewerObserver.handleNewChildren([mutation]);
 
     expect(parentElement.classList.contains('doc-viewer-parent')).toBe(true);
-    expect(newChildrenCallback).toHaveBeenCalledWith(parentElement);
+    expect(newChildrenCallback).toHaveBeenCalledWith(rootElement);
+    expect(eachNewChildrenCallback).toHaveBeenCalledWith(parentElement);
   });
 
   test('should observe newly added rows and call the callback', () => {
@@ -142,6 +152,6 @@ describe('DocViewerObserver', () => {
       childList: true,
       subtree: false,
     });
-    expect(newChildrenCallback).toHaveBeenCalledWith(newCell);
+    expect(eachNewChildrenCallback).toHaveBeenCalledWith(newCell);
   });
 });
