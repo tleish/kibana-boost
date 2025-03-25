@@ -2,7 +2,7 @@ const esbuild = require('esbuild');
 const path = require('path');
 const fs = require('fs');
 
-const VERSION = '0.6.0'
+const VERSION = '0.6.2'
 
 const cssStringPlugin = {
   name: 'css-string',
@@ -26,23 +26,13 @@ let userScriptBanner = `
 // @updateURL    https://github.com/tleish/kibana-boost/raw/main/dist/kibana_boost.meta.js
 // @downloadURL  https://github.com/tleish/kibana-boost/raw/main/dist/kibana_boost.user.js
 // @description  Updates Kibana view
-// @match        http://127.0.0.1:9200/_plugin/kibana/app/kibana*
+// @match        */_plugin/kibana/app/kibana*
 // @copyright    2024+, tleish
 // @grant        GM_addElement
 // @grant        GM_addStyle
 // @grant        GM_openInTab
 // ==/UserScript==
 `.trim();
-
-// let metaScriptBanner = userScriptBanner;
-// // Add the require directive to the banner if ENV is development
-// if (process.env.NODE_ENV !== 'production') {
-//   userScriptBanner += `\n// @require      file://${path.resolve(__dirname, 'dist/kibana_boost.dev.user.js')}`;
-// }
-//
-// userScriptBanner += `\n// ==/UserScript==`;
-// metaScriptBanner += `\n// ==/UserScript==`;
-
 
 module.exports = {
   entryPoints: ['src/index.js'],

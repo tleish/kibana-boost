@@ -1,11 +1,11 @@
 // ==UserScript==
 // @name         Kibana Boost
 // @namespace    https://github.com/tleish/
-// @version      0.6.0
+// @version      0.6.2
 // @updateURL    https://github.com/tleish/kibana-boost/raw/main/dist/kibana_boost.meta.js
 // @downloadURL  https://github.com/tleish/kibana-boost/raw/main/dist/kibana_boost.user.js
 // @description  Updates Kibana view
-// @match        http://127.0.0.1:9200/_plugin/kibana/app/kibana*
+// @match        */_plugin/kibana/app/kibana*
 // @copyright    2024+, tleish
 // @grant        GM_addElement
 // @grant        GM_addStyle
@@ -443,7 +443,7 @@
       const removeFilterButtons = document.querySelectorAll("button.filter-remove");
       [...removeFilterButtons].slice(0, -1).reverse().forEach((button) => button.click());
       const url = new URL(window.location);
-      const href = url.href.replace(/,query:\(language:lucene,query:[^\)]+\)/, "");
+      const href = url.href.replace(/,query:\(language:[^,]+,query:[^\)]+\)/, "");
       history.go(removeFilterButtons.length * -1);
       GM_openInTab(href, { active: true });
     }
@@ -617,9 +617,9 @@
   var style_default = '.kbnDocViewer__value .whitespace-pre-wrap {\n  white-space: pre-wrap;\n}\n\n.doc-viewer-parent {\n  position: relative;\n  /*width: 100%;*/\n  /*white-space: normal!important;*/\n}\n\n.doc-viewer-parent .doc-viewer-buttons {\n  visibility: hidden;\n  position: -webkit-sticky; /* Safari */\n  position: absolute;\n  top: 4px;\n  right: 20px;\n  z-index: 1000;\n  display: flex;\n  flex-direction: row; /* This ensures the buttons are positioned horizontally */\n  justify-content: space-between; /* Optional: controls the spacing between buttons */\n  align-items: center; /* Optional: vertically aligns the buttons within the container */\n}\n\n.doc-viewer-parent .doc-viewer-buttons button {\n  position: relative;\n  line-height: 12px;\n  border-radius: 4px;\n  border: 1px solid #B5D8FF;\n  background-color: #FFF;\n  width: 22px;\n  height: 22px;\n  align-items: center;\n  justify-content: center;\n}\n\n.doc-viewer-parent .doc-viewer-buttons button svg {\n  width: 14px;\n  height: 14px;\n}\n\n.doc-viewer-parent .doc-viewer-buttons:hover {\n  background-color: white;\n}\n\ntr[data-test-subj^="tableDocViewRow"]:hover,\ntr[data-test-subj^="tableDocViewRow"]:hover .hljs {\n  background-color: #f9fafb;\n}\n\n.doc-viewer-parent .doc-viewer-buttons:hover ~ .kbnDocViewer__value,\n.doc-viewer-parent .doc-viewer-buttons:hover ~ .kbnDocViewer__value .hljs {\n  background-color: #B5D8FF;\n}\n\n.doc-viewer-parent .doc-viewer-buttons:hover ~ .kbnDocViewer__value .ignore-text {\n  color: transparent;\n}\n\n.doc-viewer-parent:hover .doc-viewer-buttons {\n  visibility: visible;\n}\n\n.doc-viewer-parent.collapsed .kbnDocViewer__value {\n  overflow: auto;\n  max-height: 300px;\n}\n\n.kbnDocViewer__value {\n  width: 100%;\n}\n\n.doc-viewer-button {\n  display: flex!important;\n}\n\n/* Tooltip text */\n.doc-viewer-button .tooltiptext {\n  visibility: hidden;\n  width: 70px;\n  top: 100%;\n  left: 50%;\n  margin-left: -30px; /* Use half of the width (120/2 = 60), to center the tooltip */\n  background-color: #474D4F;\n  color: #fff;\n  text-align: center;\n  padding: 5px 0;\n  border-radius: 6px;\n  font-size: 12px;\n\n  /* Position the tooltip text - see examples below! */\n  position: absolute;\n  z-index: 1;\n}\n\n/*.doc-viewer-button .fa {*/\n/*  margin-left: -4px;*/\n/*}*/\n\n\n/* Show the tooltip text when you mouse over the tooltip container */\n.doc-viewer-button:hover .tooltiptext {\n  visibility: visible;\n}\n\n.doc-viewer-button .tooltiptext:hover {\n  pointer-events: none; /* Prevent tooltip from affecting the hover state */\n}\n\n.auto-link {\n  text-decoration: underline;\n}\n\n.kibana-boost-gray-400 {\n  color: #9ca3af;\n}\n';
 
   // src/index.js
-  var discoverUrlPattern = "http://127.0.0.1:9200/_plugin/kibana/app/kibana#/discover";
+  var discoverUrlPattern = "/_plugin\\/kibana\\/app\\/kibana#\\/discover";
   function runForDiscover() {
-    if (!window.location.href.startsWith(discoverUrlPattern)) {
+    if (!window.location.href.match(discoverUrlPattern)) {
       return;
     }
     if (!window.hljs) {

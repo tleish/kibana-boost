@@ -9,9 +9,9 @@ import XHRListener from "./lib/XHRListener";
 import DataStorage from "./lib/DataStorage";
 import css from './assets/style.css';
 
-const discoverUrlPattern = 'http://127.0.0.1:9200/_plugin/kibana/app/kibana#/discover';
+const discoverUrlPattern = '/_plugin\\/kibana\\/app\\/kibana#\\/discover';
 function runForDiscover() {
-  if (!window.location.href.startsWith(discoverUrlPattern)) {
+  if (!window.location.href.match(discoverUrlPattern)) {
     return;
   }
 
@@ -101,5 +101,4 @@ run();
 
 // Optionally, listen for changes in the URL (e.g., for single-page applications)
 window.addEventListener('hashchange', run, false);
-
 
