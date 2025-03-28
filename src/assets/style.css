@@ -4,8 +4,7 @@
 
 .doc-viewer-parent {
   position: relative;
-  /*width: 100%;*/
-  /*white-space: normal!important;*/
+  display: flex;
 }
 
 .doc-viewer-parent .doc-viewer-buttons {
@@ -41,6 +40,13 @@
 .doc-viewer-parent .doc-viewer-buttons:hover {
   background-color: white;
 }
+
+
+.doc-viewer-parent .doc-viewer-buttons + .fa {
+  padding-top: 2px;
+  padding-right: 2px;
+}
+
 
 tr[data-test-subj^="tableDocViewRow"]:hover,
 tr[data-test-subj^="tableDocViewRow"]:hover .hljs {
@@ -91,11 +97,6 @@ tr[data-test-subj^="tableDocViewRow"]:hover .hljs {
   position: absolute;
   z-index: 1;
 }
-
-/*.doc-viewer-button .fa {*/
-/*  margin-left: -4px;*/
-/*}*/
-
 
 /* Show the tooltip text when you mouse over the tooltip container */
 .doc-viewer-button:hover .tooltiptext {

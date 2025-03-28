@@ -28,6 +28,7 @@ export default class DocViewerFormat {
     CustomerIdFormat.for(parent);
     MillisecondFormat.for(parent);
     BytesFormat.for(parent);
+    IdFormat.for(parent);
   }
 
   static languageFormatting = 'auto';
@@ -215,6 +216,27 @@ class MillisecondFormat {
       if(isNaN(value)) return;
 
       element.innerHTML = `${value}<span class="ignore-text kibana-boost-gray-400">ms</span>`;
+    });
+  }
+}
+
+class IdFormat {
+  static TYPES = ['user'];
+  static for(parent) {
+    const format = new IdFormat(parent);
+    format.apply();
+  }
+
+  constructor(parent) {
+    this.parent = parent;
+    this.elements = IdFormat.TYPES.map(type => parent.querySelector(`tr[data-test-subj="tableDocViewRow-${type}"] .kbnDocViewer__value > span`)).filter(item => item !== null);
+  }
+
+  apply() {
+    if(this.elements.length === 0) return;
+
+    this.elements.forEach(element => {
+      element.textContent = element.textContent.replace(/,/g, '');
     });
   }
 }
