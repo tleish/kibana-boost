@@ -188,7 +188,8 @@ class CustomerIdFormat {
   apply() {
     if(!this.element) return;
 
-    const customerId = parseInt(this.element.textContent);
+    const customerId = parseInt(this.element.textContent.replace(/,/g, ''), 10);
+
     if(isNaN(customerId)) return this.element.textContent;
 
     this.element.innerHTML =  `<a href="https://app.ehub.com/home/index?customer_id=${customerId}" class="auto-link" target="_blank">${customerId}</a>`;
@@ -196,7 +197,7 @@ class CustomerIdFormat {
 }
 
 class MillisecondFormat {
-  static TYPES = ['duration', 'db', 'elapsed_time', 'server_time', 'view'];
+  static TYPES = ['duration', 'elapsed_time', 'db', 'server_time', 'view'];
   static for(parent) {
     const format = new MillisecondFormat(parent);
     format.apply();
@@ -212,10 +213,10 @@ class MillisecondFormat {
 
     this.elements.forEach(element => {
 
-      const value = parseFloat(element.textContent);
+      const value = parseFloat(element.textContent.replace(/,/g, ''));
       if(isNaN(value)) return;
 
-      element.innerHTML = `${value}<span class="ignore-text kibana-boost-gray-400">ms</span>`;
+      element.innerHTML = `${value.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}<span class="ignore-text kibana-boost-gray-400">ms</span>`;
     });
   }
 }
@@ -258,10 +259,10 @@ class BytesFormat {
 
     this.elements.forEach(element => {
 
-      const value = parseFloat(element.textContent);
+      const value = parseFloat(element.textContent.replace(/,/g, ''));
       if(isNaN(value)) return;
 
-      element.innerHTML = `${value}<span class="ignore-text kibana-boost-gray-400"> bytes</span>`;
+      element.innerHTML = `${value.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}<span class="ignore-text kibana-boost-gray-400"> bytes</span>`;
     });
   }
 }

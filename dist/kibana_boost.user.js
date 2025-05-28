@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kibana Boost
 // @namespace    https://github.com/tleish/
-// @version      0.6.2
+// @version      0.6.3
 // @updateURL    https://github.com/tleish/kibana-boost/raw/main/dist/kibana_boost.meta.js
 // @downloadURL  https://github.com/tleish/kibana-boost/raw/main/dist/kibana_boost.user.js
 // @description  Updates Kibana view
@@ -272,7 +272,7 @@
     apply() {
       if (!this.element)
         return;
-      const customerId = parseInt(this.element.textContent);
+      const customerId = parseInt(this.element.textContent.replace(/,/g, ""), 10);
       if (isNaN(customerId))
         return this.element.textContent;
       this.element.innerHTML = `<a href="https://app.ehub.com/home/index?customer_id=${customerId}" class="auto-link" target="_blank">${customerId}</a>`;
@@ -291,15 +291,15 @@
       if (this.elements.length === 0)
         return;
       this.elements.forEach((element) => {
-        const value = parseFloat(element.textContent);
+        const value = parseFloat(element.textContent.replace(/,/g, ""));
         if (isNaN(value))
           return;
-        element.innerHTML = `${value}<span class="ignore-text kibana-boost-gray-400">ms</span>`;
+        element.innerHTML = `${value.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}<span class="ignore-text kibana-boost-gray-400">ms</span>`;
       });
     }
   };
   var MillisecondFormat = _MillisecondFormat;
-  __publicField(MillisecondFormat, "TYPES", ["duration", "db", "elapsed_time", "server_time", "view"]);
+  __publicField(MillisecondFormat, "TYPES", ["duration", "elapsed_time", "db", "server_time", "view"]);
   var _IdFormat = class {
     static for(parent) {
       const format = new _IdFormat(parent);
@@ -332,10 +332,10 @@
       if (this.elements.length === 0)
         return;
       this.elements.forEach((element) => {
-        const value = parseFloat(element.textContent);
+        const value = parseFloat(element.textContent.replace(/,/g, ""));
         if (isNaN(value))
           return;
-        element.innerHTML = `${value}<span class="ignore-text kibana-boost-gray-400"> bytes</span>`;
+        element.innerHTML = `${value.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}<span class="ignore-text kibana-boost-gray-400"> bytes</span>`;
       });
     }
   };
